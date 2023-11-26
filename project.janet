@@ -4,4 +4,5 @@
   :author "Bob Tolbert"
   :license "MIT"
   :url "https://github.com/rwtolbert/adopt-janet"
-  :repo "git+https://github.com/rwtolbert/adopt-janet.git")
+  :repo "git+https://github.com/rwtolbert/adopt-janet.git"
+  :dependencies ["https://github.com/janet-lang/spork.git"])

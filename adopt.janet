@@ -51,11 +51,11 @@
   (default code 0)
   (os/exit code))
 
-(defn error
-  "emit message and exit"
-  [msg]
-  (print "Error: " msg)
-  (exit 1))
+# (defn error
+#   "emit message and exit"
+#   [msg]
+#   (print "Error: " msg)
+#   (exit 1))
 
 
 (defn print-object
@@ -79,8 +79,8 @@
   (def $type (gensym))
   ~(let [$type (type ,place)]
     #  (print "check-type place " ,place " " ,(type place) " $t " $type " " (type $type))
-     (assert (,member $type ,types) (string/format "'%q (%q)' failed check-type" ,place $type))))
-
+     (if (not (,member $type ,types))
+       (error (string/format "'%q (%q)' failed check-type" ,place $type)))))
 
 (defn to-pairs [arr]
   "Convert array into array of pairs"
@@ -104,6 +104,8 @@
 # (defmacro check-types (&rest check-type-pairs)
 #   ~(each () check-type-pairs)
 #   )
+
+
 
 (defn make-option
   "Create and return an option, suitable for use in an interface.
@@ -168,6 +170,9 @@
                           name reducer)))
   (check-type long [:string :nil])
   (check-type short [:string :nil])
+  (check-type help [:string])
+  (check-type manual [:string :nil])
+  (check-type parameter [:string :nil])
   @{:name name
     :help help
     :result-key result-key
