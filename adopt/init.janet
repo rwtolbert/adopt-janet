@@ -1,42 +1,9 @@
+(import ./utils :export true)
 
-(defn add2
+(defn- add2
   "Sum two numbers"
   [x y]
   (+ x y))
-
-
-(defn collect (arr el)
-  "Append element `el` to the end of `arr`.
-
-  It is useful as a `:reduce` function when you want to collect all values given
-  for an option.
-
-  "
-  (array/push arr el))
-
-
-(defn first-arg
-  "Return `new` if `old` is `nil`, otherwise return `old`.
-
-  It is useful as a `:reduce` function when you want to just keep the
-  first-given value for an option.
-
-  "
-  [old new]
-  (if (nil? old)
-    new
-    old))
-
-
-(defn last-arg (old new)
-  "Return `new`.
-
-  It is useful as a `:reduce` function when you want to just keep the last-given
-  value for an option.
-
-  "
-  new)
-
 
 (defn argv
   "Return a list of the program name and command line arguments.
@@ -164,9 +131,9 @@
   #   (error (string/format "Option %s requires :reducer" name)))
   (when (and (nil? short) (nil? long))
     (error (string/format "Option %s requires one of :short/:long" name)))
-  (when (and (member reducer @[collect first-arg last-arg])
+  (when (and (member reducer @[utils/collect utils/first-arg utils/last-arg])
              (nil? parameter))
-    (error (string/format "Option %s has reduce function %s, which requires a :parameter."
+    (error (string/format "Option %s has reducer function %s, which requires a :parameter."
                           name reducer)))
   (check-type long [:string :nil])
   (check-type short [:string :nil])
