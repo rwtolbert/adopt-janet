@@ -27,9 +27,9 @@
   (if (and l s)
     (printf "%s: -%s/--%s" (get obj :name) s l)
     (do (when (not (nil? l))
-       (printf "%s: --%s" (get obj :name) l))
-     (when (not (nil? s))
-       (printf "%s: -%s" (get obj :name) s)))))
+          (printf "%s: --%s" (get obj :name) l))
+        (when (not (nil? s))
+          (printf "%s: -%s" (get obj :name) s)))))
 
 
 (defn print-group
@@ -66,12 +66,12 @@
     (set i (+ i 2)))
   result)
 
-# (defmacro check-types
+# (defmacro check-types)
 #   "Check all the types"
 #   [& place-type-pairs]
-#   (loop [part :in (to-pairs place-type-pairs)]
+#   (loop [part :in (to-pairs place-type-pairs)])
 #     ~(print "\ninput pair " ,(first part) " " ,(type (first part)))
-#     ~(check-type (first part) (last part))))
+#     ~(check-type (first part) (last part))
 
 
 (defn make-option
@@ -140,7 +140,8 @@
   (check-type help [:string])
   (check-type manual [:string :nil])
   (check-type parameter [:string :nil])
-  @{:name name
+  @{:type 'option
+    :name name
     :help help
     :result-key result-key
     :long long
@@ -153,6 +154,10 @@
     :finally finally})
 
 
+(defn is-option [object]
+  (= (object :type) 'option))
+
+  
 (defn constantly [object]
   (fn [x &] object))
 
@@ -256,13 +261,82 @@
   (check-type help [:string :nil])
   (check-type manual [:string :nil])
   (check-type options [:array :tuple])
-  @{:name name
+  @{:type 'group
+    :name name
     :title title
     :help help
     :manual manual
     :options options})
 
+(defn is-group [object] (= (object :type) 'group))
+
 (defn make-default-group [options]
   (make-group @{:name 'default :options options}))
 
 
+(defn make-interface
+  "Create and return a command line interface.
+
+  This function takes a number of arguments that define how the interface is
+  presented to the user:
+
+  * `name` (**required**): a symbol naming the interface.
+  * `summary` (**required**): a string of a concise, one-line summary of what the program does.
+  * `usage` (**required**): a string of a UNIX-style usage summary, e.g. `\"[OPTIONS] PATTERN [FILE...]\"`.
+  * `help` (**required**): a string of a longer description of the program.
+  * `manual` (optional): a string to use in place of `help` when rendering a man page.
+  * `examples` (optional): an alist of `(prose . command)` conses to render as a list of examples.
+  * `contents` (optional): a list of options and groups.  Ungrouped options will be collected into a single top-level group.
+
+  See the full documentation for more information.
+
+  " 
+  [@{:name name
+     :summary summary
+     :usage usage
+     :help help
+     :manual manual
+     :examples examples
+     :contents contents}]
+  (default manual nil)
+  (default examples nil)
+  (default contents nil)
+  (check-type name [:string])
+  (check-type summary [:string])
+  (check-type usage [:string])
+  (check-type help [:string])
+  (check-type manual [:manual :nil])
+  (check-type examples [:array :tuple :nil])
+  (check-type contents [:array :tuple :nil])
+  (print contents " " (type contents))
+  (let [ungrouped-options (filter is-option contents)
+        groups (let
+                [grps @((make-default-group ungrouped-options))]
+                 (seq [opt :in contents]
+                   (when (is-group opt)
+                     (array/push grps opt)))
+                 grps)
+        options (seq [g :in groups] (g :options))
+        interface @{:name name
+                    :usage usage
+                    :summary summary
+                    :help help
+                    :manual manual
+                    :examples examples
+                    :groups groups
+                    :options options
+                    :short-options @{}
+                    :long-options @{}}]
+  # (defn add-option [option])
+  #   (let ((short (option :short))))
+  #         (long (option :long))
+  #     (when short)
+  #       ()
+  #       ()
+  #     (when long)
+  #       ()
+  #       ()
+  # (do) 
+  #   (list (g groups))
+  #         (map nil (add-option (g: options)))
+    interface))

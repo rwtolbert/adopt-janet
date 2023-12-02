@@ -33,6 +33,8 @@
                            :long "long"
                            :help "This option only has a long version."
                            :reduce (adopt/constantly true)}))
+(print "foo " (*long-only-option* :long))
+(print "bar " (*long-only-option* :short))
 (adopt/print-option *long-only-option*)
 
 
@@ -41,6 +43,8 @@
                            :short "s"
                            :help "This option only has a short version."
                            :reduce (adopt/constantly true)}))
+(print "foo " (*short-only-option* :long))
+(print "bar " (*short-only-option* :short))
 (adopt/print-option *short-only-option*)
 
 (assert-no-error
@@ -65,6 +69,12 @@
 
 (def *bool-group* (adopt/make-default-group [*bool-option* *bool-no-option*]))
 (adopt/print-group *bool-group*)
+
+(def *interface* (adopt/make-interface @{:name "main"
+                                         :summary "main interface for program"
+                                         :usage "main [options]"
+                                         :help "this is the help for main"
+                                         :contents [*verbose-option* *bool-group*]}))
 
 (assert-error "must have help for option"
               (def badoption (adopt/make-option @{:name "badoption"})))
