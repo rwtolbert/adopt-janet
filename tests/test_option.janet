@@ -4,6 +4,13 @@
 
 (start-suite 'option)
 
+
+(assert-error "must have help for option"
+              (def badoption (adopt/make-option @{:name "badoption"})))
+
+(assert-error "must have short or long"
+              (def badoption (adopt/make-option @{:name "badoption" :help "help"})))
+
 (assert-error "reducer function requires :parameter"
  (def *verbose-option* (adopt/make-option
                         @{:name "verbose"
@@ -25,14 +32,23 @@
                          :short "v"
                          :long "verbose"
                          :help "Add more verbose output."
-                         :reduce (adopt/constantly true)}))
+                         :reduce (adopt/constantly true)
+                         :finally (fn [x] (printf "final value for *verbose-option*: %q" x))}))
 (adopt/print-option *verbose-option*)
+
+(def *param-option* (adopt/make-option
+                     @{:name "x"
+                       :short "x"
+                       :help "value for x"
+                       :parameter true
+                       :reduce (fn [old current] (printf "RRRR reduce for x old:%q current:%q" old current) current)}))
 
 (def *long-only-option* (adopt/make-option
                          @{:name "long-only"
                            :long "long"
                            :help "This option only has a long version."
-                           :reduce (adopt/constantly true)}))
+                           :parameter true
+                           :reduce adopt/utils/last-arg}))
 (print "foo " (*long-only-option* :long))
 (print "bar " (*long-only-option* :short))
 (adopt/print-option *long-only-option*)
@@ -74,12 +90,20 @@
                                          :summary "main interface for program"
                                          :usage "main [options]"
                                          :help "this is the help for main"
-                                         :contents [*verbose-option* *bool-group*]}))
+                                         :contents [*verbose-option* *param-option* *long-only-option* *bool-group*]}))
 
-(assert-error "must have help for option"
-              (def badoption (adopt/make-option @{:name "badoption"})))
+(printf "########## short options %q" (keys (*interface* :short-options)))
 
-(assert-error "must have short or long"
-              (def badoption (adopt/make-option @{:name "badoption" :help "help"})))
+(def argv @["-v" "--no-print" "-xfoo" "--long" "bar" "--" "a.txt" "b.txt"])
+(printf "FINAL: %q\n\n" (adopt/parse-options *interface* argv))
+
+(def argv @["-v" "-P" "-xfoo" "--long=bar" "--" "a.txt" "b.txt"])
+(printf "FINAL: %q\n\n" (adopt/parse-options *interface* argv))
+
+(def bad-argv @["-Q" "a.txt" "b.txt"])
+(assert-error "Problematic option -Q"
+  (adopt/parse-options *interface* bad-argv))
+
+# (adopt/parse-options-or-exit *interface* bad-argv)
 
 (end-suite)

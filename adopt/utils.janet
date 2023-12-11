@@ -30,3 +30,38 @@
   "
   new)
 
+(defn has-key [table key]
+  "Check if 'key' is in 'table"
+  (not (nil? (table key))))
+
+(defn shortp [arg]
+  "Validate a short arg, can be -x or -vvvv"
+  (and (> (length arg) 1)
+       (= (string/slice arg 0 1) "-")
+       (not (string/find "-" (string/slice arg 1 (length arg))))))
+
+(defn longp [arg]
+  "Validate a long arg like --verbose"
+  (and (> (length arg) 2)
+       (= (string/slice arg 0 1) "-")
+       (= (string/slice arg 1 2) "-")))
+
+(defn terminatorp [arg]
+  "Validate the special terminator arg '--'"
+  (= "--" arg))
+
+(defn exit
+  "Exit the program with status `code`."
+  [&opt code]
+  (default code 0)
+  (os/exit code))
+
+(defn handle-error (e &opt x)
+  (match (type e)
+    :string (print e)
+    :function (print (e x))
+    _ (printf "unknown error type %q" (type e))))
+
+(defn handle-error-and-exit (e &opt x)
+  (handle-error e x)
+  (exit 1))

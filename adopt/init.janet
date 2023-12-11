@@ -12,12 +12,6 @@
   []
   (dyn :args))
 
-(defn exit
-  "Exit the program with status `code`."
-  [&opt code]
-  (default code 0)
-  (os/exit code))
-
 
 (defn print-option
   "Print an option/parameter"
@@ -114,14 +108,14 @@
     :finally finally}]
   (default name nil)
   (default help nil)
-  (default result-key nil)
+  (default result-key name)
   (default long nil)
   (default short nil)
   (default manual nil)
   (default parameter nil)
   (default reducer nil)
   (default initial-value nil)
-  (default key nil)
+  (default key identity)
   (default finally nil)
   (when (nil? name)
     (error (string/format "make-option requires :name")))
@@ -139,7 +133,9 @@
   (check-type short [:string :nil])
   (check-type help [:string])
   (check-type manual [:string :nil])
-  (check-type parameter [:string :nil])
+  (check-type parameter [:boolean :nil])
+  (check-type finally [:function :nil])
+  (check-type key [:function :nil])
   @{:type 'option
     :name name
     :help help
@@ -157,7 +153,7 @@
 (defn is-option [object]
   (= (object :type) 'option))
 
-  
+
 (defn constantly [object]
   (fn [x &] object))
 
@@ -208,25 +204,23 @@
     :long-no long-no
     :short short
     :short-no short-no
-    :result-key result-key
     :help help
     :help-no help-no
     :manual manual
-    :manual-no manual-no
-    :initial-value initial-value}]
+    :manual-no manual-no}]
   (default name-no (string/format "no-%s" name))
   (default long-no (when long (string/format "no-%s" long)))
   (default short-no (when short (string/ascii-upper short)))
   [(make-option @{:name name
-                  :result-key result-key
+                  :result-key name
                   :long long
                   :short short
                   :help help
                   :manual manual
-                  :initial-value initial-value
+                  :initial-value nil
                   :reduce (constantly true)})
    (make-option @{:name name-no
-                  :result-key result-key
+                  :result-key name
                   :long long-no
                   :short short-no
                   :help help-no
@@ -290,7 +284,7 @@
 
   See the full documentation for more information.
 
-  " 
+  "
   [@{:name name
      :summary summary
      :usage usage
@@ -316,7 +310,7 @@
                    (when (is-group opt)
                      (array/push grps opt)))
                  grps)
-        options (seq [g :in groups] (g :options))
+        options (flatten (seq [g :in groups] (g :options)))
         interface @{:name name
                     :usage usage
                     :summary summary
@@ -326,17 +320,107 @@
                     :groups groups
                     :options options
                     :short-options @{}
-                    :long-options @{}}]
-  # (defn add-option [option])
-  #   (let ((short (option :short))))
-  #         (long (option :long))
-  #     (when short)
-  #       ()
-  #       ()
-  #     (when long)
-  #       ()
-  #       ()
-  # (do) 
-  #   (list (g groups))
-  #         (map nil (add-option (g: options)))
+                    :long-options @{}}
+        add-option (fn [option]
+                     (print-option option)
+                     (let [short (option :short)
+                           long (option :long)]
+                       (printf "******* in add-option short:%q long:%q\n" short long)
+                       (when short
+                         (when (utils/has-key (interface :short-options) short)
+                           (error (string/format "Duplicate short-option %s." short)))
+                         (put (interface :short-options) short option))
+                       (when long
+                         (when (utils/has-key (interface :long-options) long)
+                           (error (string/format "Duplicate long-option %s." long)))
+                         (put (interface :long-options) long option))))]
+    (seq [g :in groups]
+      (print "in make-interface")
+      (print-group g)
+      (map add-option (g :options)))
     interface))
+
+# parsing options from args
+(defn initialize-results [interface results]
+  (seq [option :in (interface :options)]
+    (when (not (nil? (option :initial-value)))
+      (put results (option :key) (option :initial-value))))
+  (printf "\ninitialize-results %q" results))
+
+(defn finalize-results [interface results]
+  (seq [option :in (interface :options)]
+    (when (not (nil? (option :finally)))
+      ((option :finally) (results (option :key))))))
+
+(defn parse-short [interface results arg remaining]
+  # (printf "interface %q" (interface :short-options))
+  (let [short-name (string/slice arg 1 2)
+        option (get (interface :short-options) short-name)]
+    # (printf "parse-short %q" short-name)
+    (when (nil? option)
+      (error (string/format "Problematic option %s" arg)))
+    (let [k (option :result-key)
+          current (results k)]
+      # (printf "option key: %q" k)
+      (printf "current results: %q" results)
+      (put results k
+           (if (option :parameter)
+             (let [param ((option :key) (if (> (length arg) 2)
+                                          (string/slice arg 2)    # case of -xfoo
+                                          (array/pop remaining)))] # case of -x foo 
+              #  (printf "   param value: %q" param)
+               ((option :reduce) current param))
+             ((option :reduce) current)))))
+  remaining)
+
+
+(defn parse-long [interface results arg remaining]
+  (let [pos (string/find "=" arg)
+        long-name (string/slice arg 2 pos)
+        option (get (interface :long-options) long-name)]
+    (when (nil? option)
+      (error (string/format "Problematic option %s" arg)))
+    (let [k (option :result-key)
+          current (results k)]
+      (put results k
+           (if (option :parameter)
+             (let [param ((option :key) (if pos
+                                          (string/slice arg (inc pos))
+                                          (array/pop remaining)))]
+               ((option :reduce) current param))
+             ((option :reduce) current)))))
+  remaining)
+
+
+(defn parse-options [interface & args]
+  (print interface)
+  (printf "input args %q" args)
+  (let [toplevel @[]
+        remaining (reverse (flatten args))
+        results @{}]
+    (initialize-results interface results)
+    (while (> (length remaining) 0)
+      (def arg (array/pop remaining))
+      (print "arg " arg " " (length remaining))
+      (try
+        (cond
+          (utils/terminatorp arg) (do
+                                    (seq [a :in remaining]
+                                      (array/push toplevel a))
+                                    (array/clear remaining))
+          (utils/shortp arg) (parse-short interface results arg remaining)
+          (utils/longp arg) (parse-long interface results arg remaining)
+          (array/push toplevel arg))
+        ([e] (error e))))
+    (reverse toplevel)
+    (printf "toplevel stuff: %q" toplevel)
+    (finalize-results interface results)
+    [toplevel results]))
+
+
+(defn parse-options-or-exit [interface & args]
+  (try
+    (parse-options interface args)
+    ([e] (do
+           (printf e)
+           (utils/exit 1)))))
