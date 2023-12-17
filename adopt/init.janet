@@ -293,16 +293,15 @@
      :examples examples
      :contents contents}]
   (default manual nil)
-  (default examples nil)
-  (default contents nil)
+  (default examples @[])
+  (default contents @[])
   (check-type name [:string])
   (check-type summary [:string])
   (check-type usage [:string])
   (check-type help [:string])
   (check-type manual [:manual :nil])
-  (check-type examples [:array :tuple :nil])
-  (check-type contents [:array :tuple :nil])
-  (print contents " " (type contents))
+  (check-type examples [:array :tuple])
+  (check-type contents [:array :tuple])
   (let [ungrouped-options (filter is-option contents)
         groups (let
                 [grps @((make-default-group ungrouped-options))]
@@ -335,8 +334,8 @@
                            (error (string/format "Duplicate long-option %s." long)))
                          (put (interface :long-options) long option))))]
     (seq [g :in groups]
-      (print "in make-interface")
-      (print-group g)
+      # (print "in make-interface")
+      # (print-group g)
       (map add-option (g :options)))
     interface))
 
@@ -345,7 +344,8 @@
   (seq [option :in (interface :options)]
     (when (not (nil? (option :initial-value)))
       (put results (option :key) (option :initial-value))))
-  (printf "\ninitialize-results %q" results))
+  # (printf "\ninitialize-results %q" results)
+  )
 
 (defn finalize-results [interface results]
   (seq [option :in (interface :options)]
@@ -392,16 +392,15 @@
   remaining)
 
 
-(defn parse-options [interface & args]
-  (print interface)
-  (printf "input args %q" args)
+(defn parse-options [interface &opt args]
+  (default args [])
   (let [toplevel @[]
         remaining (reverse (flatten args))
         results @{}]
     (initialize-results interface results)
     (while (> (length remaining) 0)
       (def arg (array/pop remaining))
-      (print "arg " arg " " (length remaining))
+      # (print "arg " arg " " (length remaining))
       (try
         (cond
           (utils/terminatorp arg) (do
@@ -413,7 +412,7 @@
           (array/push toplevel arg))
         ([e] (error e))))
     (reverse toplevel)
-    (printf "toplevel stuff: %q" toplevel)
+    # (printf "toplevel stuff: %q" toplevel)
     (finalize-results interface results)
     [toplevel results]))
 
@@ -422,5 +421,5 @@
   (try
     (parse-options interface args)
     ([e] (do
-           (printf e)
+           (printf "error: %q" e)
            (utils/exit 1)))))

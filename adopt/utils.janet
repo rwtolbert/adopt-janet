@@ -1,3 +1,34 @@
+(defn maphash [func tbl]
+  (loop [[k v] :in (pairs tbl)]
+    ((func k v))))
+
+(defn maphashcat [func tbl]
+  (let [results @[]]
+    (loop [[k v] :in (pairs tbl)]
+      (array/push results (func k v)))
+    results))
+
+(defn hash-table-equal [h1 h2]
+  (and (= (length h1)
+          (length h2))
+       (label result
+              (maphash (fn [k v]
+                         (unless (= v (get h2 k))
+                           (return result nil)))
+                       h1)
+              true)))
+
+(defn array-equal [a1 a2]
+  (and (= (length a1)
+          (length a2))
+       (label result
+              (var i 0)
+              (while (< i (length a1))
+                (unless (= (get a1 i) (get a2 i))
+                  (return result nil))
+                (++ i))
+              true)))
+
 (defn collect (arr el)
   "Append element `el` to the end of `arr`.
 
@@ -29,6 +60,13 @@
 
   "
   new)
+
+(defn remove-if-empty [list]
+  (let [results @[]]
+       (seq [item :in list]
+         (unless (= item "")
+           (array/push results item)))
+    results))
 
 (defn has-key [table key]
   "Check if 'key' is in 'table"

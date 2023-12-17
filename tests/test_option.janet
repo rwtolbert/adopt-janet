@@ -100,6 +100,11 @@
 (def argv @["-v" "-P" "-xfoo" "--long=bar" "--" "a.txt" "b.txt"])
 (printf "FINAL: %q\n\n" (adopt/parse-options *interface* argv))
 
+(def [args results] (adopt/parse-options *interface* argv))
+(printf "INPUT:   %q" argv)
+(printf "ARGS:    %q" args)
+(printf "RESULTS: %q\n" results)
+
 (def bad-argv @["-Q" "a.txt" "b.txt"])
 (assert-error "Problematic option -Q"
   (adopt/parse-options *interface* bad-argv))
