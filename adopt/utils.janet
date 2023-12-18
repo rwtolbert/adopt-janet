@@ -36,7 +36,12 @@
   for an option.
 
   "
-  (array/push arr el))
+  (if (= (type arr) :array)
+    (array/push arr el)
+    (let [result @[]]
+      (when (not (nil? arr))
+        (array/push result arr))
+      (array/push result el))))
 
 
 (defn first-arg

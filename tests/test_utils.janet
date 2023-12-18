@@ -32,25 +32,16 @@
 (assert (adopt/utils/terminatorp "--"))
 
 (defn test-x [x]
-  (print "in test-x " x)
   (when (nil? x)
     (error (fn [y] (string/format "%q is nil" y)))))
 
 (def x nil)
-
-# (defn handle-error (e &opt x)
-#   (assert (type e) :function)
-#   (match (type e)
-#     :string (print e)
-#     :function (print "handler error: " (e x))
-#     _ (printf "unknown error type %q" (type e))))
 
 (try
   (test-x x)
   ([e]
    (adopt/utils/handle-error e x)))
 
-(adopt/utils/handle-error "boo")
 (adopt/utils/handle-error (fn [x] (string/format "error val: %q" x)) 42)
 (adopt/utils/handle-error 42)
 

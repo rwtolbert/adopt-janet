@@ -129,11 +129,12 @@
              (nil? parameter))
     (error (string/format "Option '%s' has reducer function, which requires a :parameter."
                           name)))
+  (check-type name [:symbol])
   (check-type long [:string :nil])
   (check-type short [:string :nil])
   (check-type help [:string])
   (check-type manual [:string :nil])
-  (check-type parameter [:boolean :nil])
+  (check-type parameter [:string :nil])
   (check-type finally [:function :nil])
   (check-type key [:function :nil])
   @{:type 'option
@@ -208,7 +209,7 @@
     :help-no help-no
     :manual manual
     :manual-no manual-no}]
-  (default name-no (string/format "no-%s" name))
+  (default name-no (symbol "no-" name))
   (default long-no (when long (string/format "no-%s" long)))
   (default short-no (when short (string/ascii-upper short)))
   [(make-option @{:name name
@@ -321,10 +322,8 @@
                     :short-options @{}
                     :long-options @{}}
         add-option (fn [option]
-                     (print-option option)
                      (let [short (option :short)
                            long (option :long)]
-                       (printf "******* in add-option short:%q long:%q\n" short long)
                        (when short
                          (when (utils/has-key (interface :short-options) short)
                            (error (string/format "Duplicate short-option %s." short)))
@@ -334,16 +333,17 @@
                            (error (string/format "Duplicate long-option %s." long)))
                          (put (interface :long-options) long option))))]
     (seq [g :in groups]
-      # (print "in make-interface")
-      # (print-group g)
       (map add-option (g :options)))
     interface))
 
 # parsing options from args
 (defn initialize-results [interface results]
+  # (printf "OPTIONS %q" (interface :options))
   (seq [option :in (interface :options)]
-    (when (not (nil? (option :initial-value)))
-      (put results (option :key) (option :initial-value))))
+    # (printf "OPTION %q" option)
+    (if (not (nil? (option :initial-value)))
+      (put results (option :result-key) (option :initial-value))
+      (put results (option :result-key) nil)))
   # (printf "\ninitialize-results %q" results)
   )
 
@@ -361,8 +361,8 @@
       (error (string/format "Problematic option %s" arg)))
     (let [k (option :result-key)
           current (results k)]
-      # (printf "option key: %q" k)
-      (printf "current results: %q" results)
+      # (printf "option result-key: %q" k)
+      # (printf "current results: %q" results)
       (put results k
            (if (option :parameter)
              (let [param ((option :key) (if (> (length arg) 2)
@@ -370,8 +370,14 @@
                                           (array/pop remaining)))] # case of -x foo 
               #  (printf "   param value: %q" param)
                ((option :reduce) current param))
-             ((option :reduce) current)))))
-  remaining)
+             (do
+               (when (> (length arg) 2)
+                #  (printf "LEFT %q" (string/format "-%s" (string/slice arg 2)))
+                 (array/push remaining (string/format "-%s" (string/slice arg 2))))
+               ((option :reduce) current))))))
+    # (printf "RESULTS %q" results)
+    # (printf "REMAINING: %q" remaining)
+    remaining)
 
 
 (defn parse-long [interface results arg remaining]
@@ -382,13 +388,18 @@
       (error (string/format "Problematic option %s" arg)))
     (let [k (option :result-key)
           current (results k)]
+      # (printf "option result-key: %q" k)
+      # (printf "current results: %q" results)
       (put results k
            (if (option :parameter)
              (let [param ((option :key) (if pos
                                           (string/slice arg (inc pos))
                                           (array/pop remaining)))]
+              #  (printf "   param value: %q" param)
                ((option :reduce) current param))
              ((option :reduce) current)))))
+  # (printf "RESULTS %q" results)
+  # (printf "REMAINING: %q" remaining)
   remaining)
 
 
@@ -398,6 +409,7 @@
         remaining (reverse (flatten args))
         results @{}]
     (initialize-results interface results)
+    # (printf "REMAINING %q" remaining)
     (while (> (length remaining) 0)
       (def arg (array/pop remaining))
       # (print "arg " arg " " (length remaining))
