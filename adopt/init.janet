@@ -116,7 +116,7 @@
   (default reducer nil)
   (default initial-value nil)
   (default key identity)
-  (default finally nil)
+  (default finally identity)
   (when (nil? name)
     (error (string/format "make-option requires :name")))
   (when (nil? help)
@@ -135,8 +135,9 @@
   (check-type help [:string])
   (check-type manual [:string :nil])
   (check-type parameter [:string :nil])
-  (check-type finally [:function :nil])
-  (check-type key [:function :nil])
+  (check-type reducer [:function :cfunction :nil])
+  (check-type finally [:function :cfunction :nil])
+  (check-type key [:function :cfunction :nil])
   @{:type 'option
     :name name
     :help help
@@ -340,17 +341,16 @@
 (defn initialize-results [interface results]
   # (printf "OPTIONS %q" (interface :options))
   (seq [option :in (interface :options)]
-    # (printf "OPTION %q" option)
     (if (not (nil? (option :initial-value)))
       (put results (option :result-key) (option :initial-value))
-      (put results (option :result-key) nil)))
-  # (printf "\ninitialize-results %q" results)
-  )
+      (put results (option :result-key) nil))))
 
 (defn finalize-results [interface results]
   (seq [option :in (interface :options)]
     (when (not (nil? (option :finally)))
-      ((option :finally) (results (option :key))))))
+      (let [orig (results (option :result-key))
+            final ((option :finally) orig)]
+        (put results (option :result-key) final)))))
 
 (defn parse-short [interface results arg remaining]
   # (printf "interface %q" (interface :short-options))
