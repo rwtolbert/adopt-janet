@@ -1,4 +1,6 @@
 (import ./utils :export true)
+(import spork)
+(import jre)
 
 (defn- add2
   "Sum two numbers"
@@ -29,7 +31,7 @@
 (defn print-group
   "Print a group of options"
   [group]
-  (printf "%s (%d options)" (group :name) (length (group :options))))
+  (printf "%s (%d options)" (or (group :name) "default") (length (group :options))))
 
 
 (defn member
@@ -66,6 +68,11 @@
 #   (loop [part :in (to-pairs place-type-pairs)])
 #     ~(print "\ninput pair " ,(first part) " " ,(type (first part)))
 #     ~(check-type (first part) (last part))
+
+
+(defn defparameter [name generator]
+  (let [name (generator)]
+    name))
 
 
 (defn make-option
@@ -252,7 +259,7 @@
   (default title nil)
   (default help nil)
   (default manual nil)
-  (check-type name [:symbol])
+  (check-type name [:symbol :nil])
   (check-type title [:string :nil])
   (check-type help [:string :nil])
   (check-type manual [:string :nil])
@@ -267,7 +274,7 @@
 (defn is-group [object] (= (object :type) 'group))
 
 (defn make-default-group [options]
-  (make-group @{:name 'default :options options}))
+  (make-group @{:options options}))
 
 
 (defn make-interface
@@ -301,7 +308,7 @@
   (check-type summary [:string])
   (check-type usage [:string])
   (check-type help [:string])
-  (check-type manual [:manual :nil])
+  (check-type manual [:string :nil])
   (check-type examples [:array :tuple])
   (check-type contents [:array :tuple])
   (let [ungrouped-options (filter is-option contents)
@@ -435,3 +442,119 @@
     ([e] (do
            (printf "error: %q" e)
            (utils/exit 1)))))
+
+(defn wrap-help [text &opt width]
+  (default width 72)
+  (unless (nil? text)
+    (let [regex (jre/compile "(\r|\r\n|\n)")
+          results (jre/search regex text)
+          lines @[]]
+      (if results
+        (seq [part :in results]
+          (array/push lines (part :prefix)))
+        (array/push lines text))
+      (string/trim (doc-format (string/join lines "\n")
+                               (+ 8 width)
+                               0)
+                   " \n"))))
+
+(defn option-string [option]
+  (let [long (option :long)
+        short (option :short)
+        parameter (option :parameter)
+        parameter-string (if parameter
+                           (string/format " %s" parameter)
+                           "")]
+    (string/format "%s" (string/join
+                         (drop-while nil?
+                                     [(when short (string/format "-%s%s" short parameter-string))
+                                      (when long (string/format "--%s%s" long parameter-string))])
+                         ", "))))
+
+(defn leader [len]
+  (seq [x :range [0 len]]
+    (prin " ")))
+
+(defn print-option-help [stream option option-column doc-column doc-width]
+  (var col 0)
+  (let [option-string (option-string option)
+        lines (wrap-help (option :help) doc-width)
+        print-at (fn [c str &opt newline]
+                   (when (>= col c)
+                     (printf "")
+                     (set col 0))
+                   (leader (- c col))
+                   (prinf "%s" str)
+                   (if newline
+                     (do (printf "") (set col 0))
+                     (set col (+ c (length str)))))]
+    (print-at option-column option-string)
+    (when lines
+      (seq [line :in (string/split "\n" lines)]
+        (print-at doc-column line true)))))
+
+(defn print-help [interface &keys
+                  {:stream stream
+                   :program-name program-name
+                   :width width
+                   :option-width option-width
+                   :include-examples include-examples}]
+  (default stream stdout)
+  (default program-name (spork/path/basename (get (argv) 0)))
+  (default width 72)
+  (default option-width 20)
+  (default include-examples true)
+  (setdyn :out stream)
+  (printf "%s - %s\n" (interface :name) (interface :summary))
+  (printf "USAGE: %s %s\n" program-name (interface :usage))
+  (print (wrap-help (interface :help) width))
+  (seq [group :in (interface :groups)]
+    (when (or (group :options) (group :help))
+      (printf "\n%s:" (or (group :title) (group :name) "Options"))
+      (let [help (group :help)
+            help-column 2
+            help-width (- width help-column)
+            option-column 2
+            option-padding 2
+            doc-column (+ option-column option-width option-padding)
+            doc-width (- width doc-column)]
+        (when help
+          (printf "%s" (wrap-help help help-width)))
+        (seq [option :in (group :options)]
+          (print-option-help stream option option-column doc-column doc-width)))))
+  (let [examples (interface :examples)
+        example-column 2
+        example-width (- width example-column)]
+    (when (and examples include-examples)
+      (printf "\nExamples:\n")
+      (seq [[prose command] :in examples]
+        (let [lines (string/split "\n" (wrap-help prose example-width))]
+          (seq [line :in lines]
+            (printf "  %s" line))
+          (printf "\n        %s\n" command))))))
+
+(defn print-help-and-exit [interface &keys
+                           {:stream stream
+                            :program-name program-name
+                            :width width
+                            :option-width option-width
+                            :include-examples include-examples
+                            :exit-fn exit-fn
+                            :exit-code exit-code}]
+  (default stream stdout)
+  (default program-name (spork/path/basename (get (argv) 0)))
+  (default width 72)
+  (default option-width 20)
+  (default include-examples true)
+  (default exit-fn os/exit)
+  (default exit-code 1)
+  (print-help interface
+              :stream stream
+              :program-name program-name
+              :width width
+              :option-width option-width
+              :include-examples include-examples)
+  (exit-fn exit-code))
+
+### Man page output
+
