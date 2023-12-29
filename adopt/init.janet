@@ -51,6 +51,7 @@
      (if (not (,member $type ,types))
        (error (string/format "'%q (%q)' failed check-type" ,place $type)))))
 
+
 (defn to-pairs [arr]
   "Convert array into array of pairs"
   (assert (even? (length arr)))
@@ -207,6 +208,8 @@
 
   "
   [{:name name
+    :result-key result-key
+    :initial-value initial-value
     :key key
     :name-no name-no
     :long long
@@ -220,20 +223,23 @@
   (default name-no (symbol "no-" name))
   (default long-no (when long (string/format "no-%s" long)))
   (default short-no (when short (string/ascii-upper short)))
+  (default initial-value nil)
+  (default result-key name)
   [(make-option @{:name name
-                  :result-key name
+                  :result-key result-key
                   :long long
                   :short short
                   :help help
                   :manual manual
-                  :initial-value nil
+                  :initial-value initial-value
                   :reduce (constantly true)})
    (make-option @{:name name-no
-                  :result-key name
+                  :result-key result-key
                   :long long-no
                   :short short-no
                   :help help-no
                   :manual manual-no
+                  # :initial-value false
                   :reduce (constantly nil)})])
 
 (defn make-group
@@ -346,11 +352,9 @@
 
 # parsing options from args
 (defn initialize-results [interface results]
-  # (printf "OPTIONS %q" (interface :options))
   (seq [option :in (interface :options)]
     (if (not (nil? (option :initial-value)))
-      (put results (option :result-key) (option :initial-value))
-      (put results (option :result-key) nil))))
+      (put results (option :result-key) (option :initial-value)))))
 
 (defn finalize-results [interface results]
   (seq [option :in (interface :options)]
@@ -396,7 +400,7 @@
     (let [k (option :result-key)
           current (results k)]
       # (printf "option result-key: %q" k)
-      # (printf "current results: %q" results)
+      # (printf "current results: %q, current: %q" results current)
       (put results k
            (if (option :parameter)
              (let [param ((option :key) (if pos

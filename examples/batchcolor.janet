@@ -1,6 +1,88 @@
 (import ../adopt)
 (import jre)
 
+(var *start* 0)
+(var *dark* true)
+
+(defn rgb-code [r g b]
+  # The 256 color mode color values are essentially r/g/b in base 6, but
+  # shifted 16 higher to account for the intiial 8+8 colors.
+  (+ (* r 36)
+     (* g 6)
+     (* b 1)
+     16))
+
+
+(defn make-colors [excludep]
+  (let [result (array/new 256)]
+    (for r 0 6
+         (for g 0 6
+              (for b 0 6
+                   (unless (excludep (+ r g b))
+                     (array/push result (rgb-code r g b))))))
+    result))
+
+(var *jre-flags* jre/:ecmascript)
+
+(def *dark-colors*  (make-colors (fn [v] (< v 3))))
+(def *light-colors* (make-colors (fn [v] (> v 11))))
+
+(def *explicit* @{})
+
+(defn find-color [str]
+  (get *explicit* str
+       (let [colors (if *dark* *dark-colors* *light-colors*)]
+         (get colors (mod (+ (hash str) *start*) (length colors))))))
+
+(defn ansi-color-start [color]
+  (string/format "\x1B[38;5;%dm" color))
+
+(defn ansi-color-end [] "\x1B[0m")
+
+(defn print-colorized [str]
+  (prinf "%s%s%s"
+          (ansi-color-start (find-color str))
+          str
+          (ansi-color-end)))
+
+(defn colorize-line [scanner line &keys {:start start}]
+  (var begin (if start start 0))
+  (let [results (jre/search scanner line)]
+    (if results # TODO check for overlapping groups - they won't work
+      (do
+        (seq [res :in results]
+          (let [groups (if (> (length (res :groups)) 1)
+                         (array/slice (res :groups) 1 (length (res :groups)))
+                         (array/slice (res :groups) 0 1))]
+            (each group groups
+              (prin (string/slice line begin (group :begin)))
+              (print-colorized (string/slice line (group :begin) (group :end)))
+              (set begin (group :end)))))
+        (prin (string/slice line begin))) # finish out the rest of the line
+      (prin line))))
+
+(defn run_ [scanner stream]
+  (loop [line :iterate (file/read stream :line)]
+    (colorize-line scanner (string line))))
+
+(defn run [pattern paths]
+  (let [scanner (jre/compile pattern)
+        paths (or (when (length paths) paths) ["-"])]
+    (seq [path :in paths]
+      (if (= path "-")
+        (run_ scanner stdin)
+        (let [stream (file/open path :r)]
+          (run_ scanner stream))))))
+
+(defn configure [options]
+  (if (options 'explicit)
+    (each [r g b str] (options 'explicit)
+      (put *explicit* str (rgb-code r g b))))
+  (set *start* (if (options 'randomize)
+                 (math/rng-int (math/rng (os/time)) 256)
+                 0))
+  (set *dark* (options 'dark)))
+
 (def *option-help*
   (adopt/make-option @{:name 'help
                        :help "Display help and exit."
@@ -43,10 +125,10 @@
 (defn match-explicit [arg]
   (let [res (jre/match parse-explicit arg)]
     (if res
-      (let [[_ r g b str] (res :groups)]
+      (let [[_ r g b str] (seq [x :in (res :groups)] (x :str))]
         [(scan-number r) (scan-number g) (scan-number b) str])
       (do
-        (printf "explict should be in the format R,G,B:string")
+        (printf "explicit should be in the format R,G,B:string: %q" arg)
         (os/exit 0)))))
 
 # (printf "%q" (match-explicit "3,5,0:hello"))
@@ -113,10 +195,12 @@ overlapping capturing groups entirely.``)
 (defn main [&]
   (let [[arguments options] (adopt/parse-options-or-exit *ui* (adopt/argv))]
     (cond
-      (< (length arguments) 3) (adopt/print-help-and-exit *ui* :exit-code 0)
+      (< (length arguments) 2) (adopt/print-help-and-exit *ui* :exit-code 0)
       (options 'help) (adopt/print-help-and-exit *ui*)
       true (let [pattern (get arguments 1)
                  files (array/slice arguments 2)]
-             (printf "pattern %s" pattern)
-             (printf "files: %q" files)
-             (printf "options %q" options)))))
+            #  (printf "pattern %s" pattern)
+            #  (printf "files: %q" files)
+            #  (printf "options %q" options)
+             (configure options)
+             (run pattern files)))))
