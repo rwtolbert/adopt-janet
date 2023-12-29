@@ -8,3 +8,6 @@
   :repo "git+https://github.com/rwtolbert/adopt-janet.git"
   :dependencies ["https://github.com/janet-lang/spork.git"
                  "git@github.com:rwtolbert/re-janet.git"])
+
+(declare-source
+  :source @["adopt"])
