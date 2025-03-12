@@ -24,8 +24,8 @@
     (printf "%s: -%s/--%s" (get obj :name) s l)
     (do (when (not (nil? l))
           (printf "%s: --%s" (get obj :name) l))
-        (when (not (nil? s))
-          (printf "%s: -%s" (get obj :name) s)))))
+      (when (not (nil? s))
+        (printf "%s: -%s" (get obj :name) s)))))
 
 
 (defn print-group
@@ -93,7 +93,7 @@
   * `:reduce` (**required**): a function designator that will be called every time the option is specified by the user.
   * `:initial-value` (optional): a value to use as the initial value of the option.
   * `:key` (optional): a function designator, only allowed for parameter-taking options, to be called on the values given by the user before they are passed along to the reducing function.  It will not be called on the initial value.
-  * `:finally` (optional): a function designator to be called on the final result after all parsing is complete. 
+  * `:finally` (optional): a function designator to be called on the final result after all parsing is complete.
 
   The manner in which the reducer is called depends on whether the option takes a parameter:
 
@@ -319,7 +319,7 @@
   (check-type contents [:array :tuple])
   (let [ungrouped-options (filter is-option contents)
         groups (let
-                [grps @((make-default-group ungrouped-options))]
+                 [grps @[(make-default-group ungrouped-options)]]
                  (seq [opt :in contents]
                    (when (is-group opt)
                      (array/push grps opt)))
@@ -377,18 +377,18 @@
       (put results k
            (if (option :parameter)
              (let [param ((option :key) (if (> (length arg) 2)
-                                          (string/slice arg 2)    # case of -xfoo
-                                          (array/pop remaining)))] # case of -x foo 
-              #  (printf "   param value: %q" param)
+                                          (string/slice arg 2) # case of -xfoo
+                                          (array/pop remaining)))] # case of -x foo
+               #  (printf "   param value: %q" param)
                ((option :reduce) current param))
              (do
                (when (> (length arg) 2)
-                #  (printf "LEFT %q" (string/format "-%s" (string/slice arg 2)))
+                 #  (printf "LEFT %q" (string/format "-%s" (string/slice arg 2)))
                  (array/push remaining (string/format "-%s" (string/slice arg 2))))
                ((option :reduce) current))))))
-    # (printf "RESULTS %q" results)
-    # (printf "REMAINING: %q" remaining)
-    remaining)
+  # (printf "RESULTS %q" results)
+  # (printf "REMAINING: %q" remaining)
+  remaining)
 
 
 (defn parse-long [interface results arg remaining]
@@ -406,7 +406,7 @@
              (let [param ((option :key) (if pos
                                           (string/slice arg (inc pos))
                                           (array/pop remaining)))]
-              #  (printf "   param value: %q" param)
+               #  (printf "   param value: %q" param)
                ((option :reduce) current param))
              ((option :reduce) current)))))
   # (printf "RESULTS %q" results)
@@ -470,10 +470,10 @@
                            (string/format " %s" parameter)
                            "")]
     (string/format "%s" (string/join
-                         (drop-while nil?
-                                     [(when short (string/format "-%s%s" short parameter-string))
-                                      (when long (string/format "--%s%s" long parameter-string))])
-                         ", "))))
+                          (drop-while nil?
+                                      [(when short (string/format "-%s%s" short parameter-string))
+                                       (when long (string/format "--%s%s" long parameter-string))])
+                          ", "))))
 
 (defn leader [len]
   (seq [x :range [0 len]]
@@ -513,7 +513,7 @@
   (printf "USAGE: %s %s\n" program-name (interface :usage))
   (print (wrap-help (interface :help) width))
   (seq [group :in (interface :groups)]
-    (when (or (group :options) (group :help))
+    (when (or (> 0 (length (group :options))) (group :help))
       (printf "\n%s:" (or (group :title) (group :name) "Options"))
       (let [help (group :help)
             help-column 2
