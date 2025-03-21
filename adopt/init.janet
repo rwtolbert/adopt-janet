@@ -290,10 +290,10 @@
 
   * `name` (**required**): a symbol naming the interface.
   * `summary` (**required**): a string of a concise, one-line summary of what the program does.
-  * `usage` (**required**): a string of a UNIX-style usage summary, e.g. `\"[OPTIONS] PATTERN [FILE...]\"`.
+  * `usage` (**required**): a vector UNIX-style usage summaries, e.g. `@[\"[OPTIONS] PATTERN [FILE...]\"]`.
   * `help` (**required**): a string of a longer description of the program.
   * `manual` (optional): a string to use in place of `help` when rendering a man page.
-  * `examples` (optional): an alist of `(prose . command)` conses to render as a list of examples.
+  * `examples` (optional): a vector of `[prose  command]` tuples to render as a list of examples.
   * `contents` (optional): a list of options and groups.  Ungrouped options will be collected into a single top-level group.
 
   See the full documentation for more information.
@@ -311,7 +311,7 @@
   (default contents @[])
   (check-type name [:string])
   (check-type summary [:string])
-  (check-type usage [:string])
+  (check-type usage [:string :vector :tuple])
   (check-type help [:string])
   (check-type manual [:string :nil])
   (check-type examples [:array :tuple])
@@ -496,6 +496,21 @@
       (seq [line :in (string/split "\n" lines)]
         (print-at doc-column line true)))))
 
+(defn print-usage [name usage]
+  (let [prefix (string/format "Usage: %s" name)
+        len (length prefix)
+        fmt (string/format "%s%ds" "%" len)
+        prefix2 (string/format fmt name)]
+    (if (= (type usage) :string)
+      (printf "Usage: %s %s\n" name usage)
+      (do
+        (for i 0 (length usage)
+          (if (= i 0)
+            (printf "%s %s" prefix (get usage i))
+            (printf "%s %s" prefix2 (get usage i))))
+        (when (> (length usage) 0)
+          (printf ""))))))
+
 (defn print-help [interface &keys
                   {:stream stream
                    :program-name program-name
@@ -509,7 +524,7 @@
   (default include-examples true)
   (setdyn :out stream)
   (printf "%s - %s\n" (interface :name) (interface :summary))
-  (printf "USAGE: %s %s\n" program-name (interface :usage))
+  (print-usage program-name (interface :usage))
   (print (wrap-help (interface :help) width))
   (seq [group :in (interface :groups)]
     (when (or (> (length (group :options)) 0) (group :help))

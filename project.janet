@@ -3,7 +3,7 @@
   :description "Janet port of Adopt CL arg processor from https://github.com/sjl/adopt"
   :author "Bob Tolbert"
   :license "MIT"
-  :version "0.1.5"
+  :version "0.2.0"
   :url "https://github.com/rwtolbert/adopt-janet"
   :repo "git+https://github.com/rwtolbert/adopt-janet.git"
   :dependencies [{:url "https://github.com/janet-lang/spork.git"}

@@ -348,11 +348,12 @@
 (assert (equal @[:a] (adopt/utils/collect @[] :a)))
 (assert (equal @[:a :b] (adopt/utils/collect @[:a] :b)))
 
+# usage as single string
 (assert-no-error
  (adopt/make-interface @{:name ""
                          :summary ""
                          :help ""
-                         :usage ""
+                         :usage "[options] arg"
                          :contents @[(adopt/make-option @{:name 'foo
                                                           :reduce (ct)
                                                           :help ""
@@ -363,6 +364,24 @@
                                                           :help ""
                                                           :short "b"
                                                           :long "bar"})]}))
+
+# usage as vector
+(assert-no-error
+ (adopt/make-interface @{:name ""
+                         :summary ""
+                         :help ""
+                         :usage ["[options] arg" "-h"]
+                         :contents @[(adopt/make-option @{:name 'foo
+                                                          :reduce (ct)
+                                                          :help ""
+                                                          :short "a"
+                                                          :long "foo"})
+                                     (adopt/make-option @{:name 'bar
+                                                          :reduce (ct)
+                                                          :help ""
+                                                          :short "b"
+                                                          :long "bar"})]}))
+
 (assert-error "duplicate short option"
  (adopt/make-interface @{:name ""
                          :summary ""
@@ -393,5 +412,41 @@
                                                           :help ""
                                                           :short "b"
                                                           :long "oops"})]}))
+
+# single/multiple usage
+(def single-usage
+  (adopt/make-interface @{:name "single"
+                          :summary "single-usage"
+                          :help "This is some help"
+                          :usage "[options] arg"
+                          :contents @[(adopt/make-option @{:name 'foo
+                                                           :reduce (ct)
+                                                           :help "Set foo"
+                                                           :short "a"
+                                                           :long "foo"})
+                                      (adopt/make-option @{:name 'bar
+                                                           :reduce (ct)
+                                                           :help "Set bar"
+                                                           :short "b"
+                                                           :long "bar"})]}))
+(adopt/print-help single-usage :program-name "single")
+
+(def multi-usage
+  (adopt/make-interface @{:name "multi"
+                          :summary "multi-usage"
+                          :help "This is some help"
+                          :usage ["[options] arg" "(-h | --help)"]
+                          :contents @[(adopt/make-option @{:name 'foo
+                                                           :reduce (ct)
+                                                           :help "Set foo"
+                                                           :short "a"
+                                                           :long "foo"})
+                                      (adopt/make-option @{:name 'bar
+                                                           :reduce (ct)
+                                                           :help "Set bar"
+                                                           :short "b"
+                                                           :long "bar"})]}))
+
+(adopt/print-help multi-usage :program-name "multi")
 
 (end-suite)
