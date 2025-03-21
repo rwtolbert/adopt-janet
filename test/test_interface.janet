@@ -339,9 +339,9 @@
 
 (check *bools* "" [] @['bool nil])
 (check *bools* "--bool" [] @['bool true])
-(check *bools* "--bool --no-bool" [] @['bool nil])
+(check *bools* "--bool --no-bool" [] @['bool false])
 (check *bools* "-b" [] @['bool true])
-(check *bools* "-b -B" [] @['bool nil])
+(check *bools* "-b -B" [] @['bool false])
 
 (assert (equal :old (adopt/utils/first-arg :old :new)))
 (assert (equal :new (adopt/utils/last-arg :old :new)))

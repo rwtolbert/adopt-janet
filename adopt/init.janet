@@ -197,14 +197,14 @@
         :short \"d\"
         :help \"Enable the debugger.\"
         :initial-value nil
-        :reduce (constantly t))
+        :reduce (constantly true))
 
     (def *option-no-debug*
       (make-option 'no-debug
         :long \"no-debug\"
         :short \"D\"
         :help \"Disable the debugger (the default).\"
-        :reduce (constantly nil))
+        :reduce (constantly false))
 
   "
   [{:name name
@@ -239,8 +239,7 @@
                   :short short-no
                   :help help-no
                   :manual manual-no
-                  # :initial-value false
-                  :reduce (constantly nil)})])
+                  :reduce (constantly false)})])
 
 (defn make-group
   "Create and return an option group, suitable for use in an interface.
