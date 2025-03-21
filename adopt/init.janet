@@ -311,7 +311,7 @@
   (default contents @[])
   (check-type name [:string])
   (check-type summary [:string])
-  (check-type usage [:string :vector :tuple])
+  (check-type usage [:string :tuple :array])
   (check-type help [:string])
   (check-type manual [:string :nil])
   (check-type examples [:array :tuple])
@@ -419,10 +419,10 @@
         remaining (reverse (flatten args))
         results @{}]
     (initialize-results interface results)
-    # (printf "REMAINING %q" remaining)
+    (printf "REMAINING %q" remaining)
     (while (> (length remaining) 0)
       (def arg (array/pop remaining))
-      # (print "arg " arg " " (length remaining))
+      (print "arg " arg " " (length remaining))
       (try
         (cond
           (utils/terminatorp arg) (do
@@ -443,7 +443,7 @@
   (try
     (parse-options interface args)
     ([e] (do
-           (printf "error: %q" e)
+           (printf "interface error: %q" e)
            (utils/exit 1)))))
 
 (defn wrap-help [text &opt width]
