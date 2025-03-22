@@ -419,10 +419,10 @@
         remaining (reverse (flatten args))
         results @{}]
     (initialize-results interface results)
-    (printf "REMAINING %q" remaining)
+    # (printf "REMAINING %q" remaining)
     (while (> (length remaining) 0)
       (def arg (array/pop remaining))
-      (print "arg " arg " " (length remaining))
+      # (print "arg " arg " " (length remaining))
       (try
         (cond
           (utils/terminatorp arg) (do
