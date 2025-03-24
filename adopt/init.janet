@@ -543,7 +543,7 @@
   (let [examples (interface :examples)
         example-column 2
         example-width (- width example-column)]
-    (when (and examples include-examples)
+    (when (and examples (> (length examples) 0) include-examples)
       (printf "\nExamples:\n")
       (seq [[prose command] :in examples]
         (let [lines (string/split "\n" (wrap-help prose example-width))]

@@ -419,6 +419,7 @@
                           :summary "single-usage"
                           :help "This is some help"
                           :usage "[options] arg"
+                          :examples @[["do foo" "single --foo"]]
                           :contents @[(adopt/make-option @{:name 'foo
                                                            :reduce (ct)
                                                            :help "Set foo"
