@@ -575,4 +575,116 @@
   (exit-fn exit-code))
 
 ### Man page output
+(defn escape [str]
+  (var result "")
+  (when (not (empty? str))
+    (set result str)
+    (set result (string/replace-all "-" " " result))
+    (when (= (result 0) 46)
+      (set result (string/format "\\[char46]%s" (string/slice result 1)))))
+  result)
 
+(defn split-paragraphs [str &keys {:delimiter delim :escape esc?}]
+  (default delim "\n.PP\n")
+  (default esc? true)
+  (var lines (string/replace-all "\n" delim str))
+  (when esc?
+    (set lines (escape lines)))
+  lines)
+
+(defn option-troff [option]
+  (let [short (option :short)
+        long (option :long)
+        parameter (option :parameter)
+        parts @[]
+        short-option (fn []
+                       (when short
+                         (if parameter
+                           (string/format "\\-%s \" \" \\fI%s\\fR" short parameter)
+                           (string/format "\\-%s" short))))
+        long-option (fn []
+                      (when long
+                        (if parameter
+                          (string/format "\\-\\-%s=\\fI%s\\fR" long parameter)
+                          (string/format "\\-\\-%s" long))))]
+    (var parts (utils/remove-nil [(short-option) (long-option)]))
+    (string/join [".BR " (string/join parts ",\\ ")])))
+
+(defn print-manual [interface &keys
+                    {:stream stream
+                     :manual-section manual-section}]
+  "Print a troff-formatted man page for `interface` to `stream`.
+
+  Example:
+
+    # (with-open-file (manual \"man/man1/foo.1\"
+    #                         :direction :output
+    #                         :if-exists :supersede)
+    #   (print-manual *ui* manual))
+
+  "
+  (default stream stdout)
+  (default manual-section 1)
+  (check-type manual-section [:number])
+  (let [f (fn [& args]
+            (file/write stream (apply string/format args))
+            (file/write stream "\n"))
+        fa (fn [string-or-array]
+             (when string-or-array
+               (file/write stream string-or-array)
+               (file/write stream "\n")))
+        print-header (fn []
+                       (f ".TH %s %d" (escape (string/ascii-upper (interface :name))) manual-section))
+        print-name (fn []
+                     (f ".SH NAME")
+                     (f "%s \\- %s" (escape (interface :name)) (escape (interface :summary))))
+        print-synopsis (fn []
+                         (f ".SH SYNOPSIS")
+                         (unless (empty? (interface :name))
+                           (case (type (interface :usage))
+                             :string (do
+                                       (f ".B %s" (escape (interface :name)))
+                                       (f ".R %s" (escape (interface :usage))))
+                             (loop [item :in (interface :usage)]
+                               (f ".B %s" (escape (interface :name)))
+                               (f ".R %s" item)
+                               (f ".br")))))
+        print-description (fn []
+                            (f ".SH DESCRIPTION")
+                            (fa (split-paragraphs (or (interface :manual) (interface :help)))))
+        print-option (fn [option]
+                       (f ".TP")
+                       (fa (option-troff option))
+                       (fa (split-paragraphs (or (option :manual) (option :help)) :delimiter "\n.IP\n")))
+        print-group (fn [group]
+                      (unless (empty? (group :options))
+                        (if (group :title)
+                          (f ".SS %s" (escape (group :title)))
+                          (f ".SS OPTIONS"))
+                        (let [desc (or (group :manual) (group :help))]
+                          (when desc
+                            (fa (split-paragraphs desc))))
+                        (map print-option (group :options))))
+        print-groups (fn []
+                       (map print-group (interface :groups)))
+        print-example (fn [prose command prefix]
+                        (fa (escape prose))
+                        (f ".PP")
+                        (f ".nf")
+                        (f ".RS")
+                        (fa (string/format "$ %s" command))
+                        (f ".RE")
+                        (f ".fi")
+                        (f prefix))
+        print-examples (fn []
+                         (let [examples (interface :examples)]
+                           (when examples
+                             (f ".SH EXAMPLES")
+                             (loop [[prose command] :in examples]
+                               (print-example prose command ".PP")))))]
+    (print-header)
+    (print-name)
+    (print-synopsis)
+    (print-description)
+    (print-groups)
+    (print-examples)))

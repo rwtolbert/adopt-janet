@@ -68,9 +68,16 @@
 
 (defn remove-if-empty [list]
   (let [results @[]]
-       (seq [item :in list]
-         (unless (= item "")
-           (array/push results item)))
+    (seq [item :in list]
+      (unless (= item "")
+        (array/push results item)))
+    results))
+
+(defn remove-nil [list]
+  (let [results @[]]
+    (seq [item :in list]
+      (unless (nil? item)
+        (array/push results item)))
     results))
 
 (defn has-key [table key]
