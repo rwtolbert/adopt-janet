@@ -9,18 +9,18 @@
     (if (not (nil? key-value-pairs))
       (loop [[k v] :in (pairs key-value-pairs)]
         (put res k v)))
-      res))
+    res))
 
 (defn equal [a b]
   (if (= (type a) :array)
     (and (= (length a) (length b))
          (label result
-                (do (var count 0)
-                    (while (< count (length a))
-                      (unless (= (get a count) (get b count))
-                        (return result false))
-                      (++ count)))
-                true))
+           (do (var count 0)
+             (while (< count (length a))
+               (unless (= (get a count) (get b count))
+                 (return result false))
+               (++ count)))
+           true))
     (= a b)))
 
 (defn array-copy [a b]
@@ -65,83 +65,82 @@
 
 (def *noop*
   (adopt/make-interface
-   @{:name "noop"
-     :summary "no options"
-     :help "this interface has no options"
-     :usage ""}))
+    @{:name "noop"
+      :summary "no options"
+      :help "this interface has no options"
+      :usage ""}))
 
 
 (def *option-types*
   (adopt/make-interface
-   @{:name "option-types"
-     :summary "testing option types"
-     :help "this interface tests both option types"
-     :usage "[OPTIONS]"
-     :contents
-     [(adopt/make-option @{:name 'long
-                           :help "long only"
-                           :long "long"
-                           :reduce (ct)})
-      (adopt/make-option @{:name 'short
-                           :help "short only"
-                           :short "s"
-                           :reduce (ct)})
-      (adopt/make-option @{:name 'both
-                           :help "both short and long"
-                           :short "b"
-                           :long "both"
-                           :reduce (ct)})]}))
+    @{:name "option-types"
+      :summary "testing option types"
+      :help "this interface tests both option types"
+      :usage "[OPTIONS]"
+      :contents
+      [(adopt/make-option @{:name 'long
+                            :help "long only"
+                            :long "long"
+                            :reduce (ct)})
+       (adopt/make-option @{:name 'short
+                            :help "short only"
+                            :short "s"
+                            :reduce (ct)})
+       (adopt/make-option @{:name 'both
+                            :help "both short and long"
+                            :short "b"
+                            :long "both"
+                            :reduce (ct)})]}))
 
 (def *reducers*
   (adopt/make-interface
     @{:name "reducers"
-    :summary "testing reducers"
-    :help "this interface tests basic reducers"
-    :usage "[OPTIONS]"
-    :contents
-    [(adopt/make-option @{:name 'c1
-                          :help "1"
-                          :short "1"
-                          :reduce (adopt/constantly 1)})
-     (adopt/make-option @{:name 'c2
-                          :help "2"
-                          :short "2"
-                          :reduce (adopt/constantly 2)})
-     (adopt/make-option @{:name 'collect
-                          :help "collect"
-                          :short "c"
-                          :long "collect"
-                          :parameter "DATA"
-                          :reduce adopt/utils/collect})
-     (adopt/make-option @{:name 'last
-                          :help "last"
-                          :short "l"
-                          :long "last"
-                          :parameter "DATA"
-                          :reduce adopt/utils/last-arg})
-     (adopt/make-option @{:name 'first
-                          :help "first"
-                          :short "f"
-                          :long "first"
-                          :parameter "DATA"
-                          :reduce adopt/utils/first-arg})]}))
+      :summary "testing reducers"
+      :help "this interface tests basic reducers"
+      :usage "[OPTIONS]"
+      :contents
+      [(adopt/make-option @{:name 'c1
+                            :help "1"
+                            :short "1"
+                            :reduce (adopt/constantly 1)})
+       (adopt/make-option @{:name 'c2
+                            :help "2"
+                            :short "2"
+                            :reduce (adopt/constantly 2)})
+       (adopt/make-option @{:name 'collect
+                            :help "collect"
+                            :short "c"
+                            :long "collect"
+                            :parameter "DATA"
+                            :reduce adopt/utils/collect})
+       (adopt/make-option @{:name 'last
+                            :help "last"
+                            :short "l"
+                            :long "last"
+                            :parameter "DATA"
+                            :reduce adopt/utils/last-arg})
+       (adopt/make-option @{:name 'first
+                            :help "first"
+                            :short "f"
+                            :long "first"
+                            :parameter "DATA"
+                            :reduce adopt/utils/first-arg})]}))
 
 (def *same-key*
   (adopt/make-interface @{:name "same-key"
                           :summary "testing same keys"
                           :help "this interface tests options with the same result-key"
                           :usage "[OPTIONS]"
-                          :contents @[
-                           (adopt/make-option @{:name 'a
-                                                :result-key 'foo
-                                                :help "1"
-                                                :short "1"
-                                                :reduce (adopt/constantly 1)})
-                           (adopt/make-option @{:name 'b
-                                                :result-key 'foo
-                                                :help "2"
-                                                :short "2"
-                                                :reduce (adopt/constantly 2)})]}))
+                          :contents @[(adopt/make-option @{:name 'a
+                                                           :result-key 'foo
+                                                           :help "1"
+                                                           :short "1"
+                                                           :reduce (adopt/constantly 1)})
+                                      (adopt/make-option @{:name 'b
+                                                           :result-key 'foo
+                                                           :help "2"
+                                                           :short "2"
+                                                           :reduce (adopt/constantly 2)})]}))
 
 (def *initial-value*
   (adopt/make-interface @{:name "initial-value"
@@ -206,11 +205,11 @@
 
 (def [*bool* *no-bool*]
   (adopt/make-boolean-options
-   @{:name 'bool
-     :long "bool"
-     :short "b"
-     :help "Bool yes."
-     :help-no "Bool no."}))
+    @{:name 'bool
+      :long "bool"
+      :short "b"
+      :help "Bool yes."
+      :help-no "Bool no."}))
 
 (def *bools*
   (adopt/make-interface @{:name "bools"
@@ -251,7 +250,7 @@
 (check *option-types* "foo --both bar"
        ["foo" "bar"]
        @['short nil
-        'long nil
+         'long nil
          'both true])
 
 (check *option-types* "foo -b bar"
@@ -261,10 +260,10 @@
          'both true])
 
 (check *option-types* "foo -bs --long bar"
-         ["foo" "bar"]
-         @['short true
-           'long true
-           'both true])
+       ["foo" "bar"]
+       @['short true
+         'long true
+         'both true])
 
 (assert-no-error "this should work"
                  (adopt/make-option @{:name 'foo :reduce (ct) :help "this should work" :short "x"}))
@@ -296,17 +295,17 @@
          'collect nil])
 
 (check *same-key* ""
-         []
-         @['x nil])
+       []
+       @['x nil])
 (check *same-key* "-1"
-         []
-         @['foo 1])
+       []
+       @['foo 1])
 (check *same-key* "-2"
-         []
-         @['foo 2])
+       []
+       @['foo 2])
 (check *same-key* "-1121"
-         []
-         @['foo 1])
+       []
+       @['foo 1])
 
 (check *initial-value* ""
        []
@@ -343,6 +342,40 @@
 (check *bools* "-b" [] @['bool true])
 (check *bools* "-b -B" [] @['bool false])
 
+
+# make sure an option with a parameter fails to parse if it is missing
+
+(def *has-parameter*
+  (adopt/make-interface
+    @{:name "has-parameter"
+      :summary "has parameter"
+      :usage "foo"
+      :help "foo"
+      :contents [(adopt/make-option @{:name 'depth
+                                      :help "depth"
+                                      :long "depth"
+                                      :short "d"
+                                      :parameter "DEPTH"
+                                      :reduce adopt/utils/first-arg})]}))
+
+(assert-error "short option with parameter needs a value"
+              (def [a b] (adopt/parse-options *has-parameter* (split-args "-d"))))
+
+(assert-error "long option with parameter needs a value"
+              (def [a b] (adopt/parse-options *has-parameter* (split-args "--depth"))))
+
+(assert-no-error "short option has parameter"
+                 (def [a b] (adopt/parse-options *has-parameter* (split-args "-d 5")))
+                 (assert (= (b 'depth) "5")))
+
+(assert-no-error "short option has parameter"
+                 (def [a b] (adopt/parse-options *has-parameter* (split-args "--depth 5")))
+                 (assert (= (b 'depth) "5")))
+
+# (print "***** PARAMETER")
+# (printf "%q" a)
+# (printf "%q" b)
+
 (assert (equal :old (adopt/utils/first-arg :old :new)))
 (assert (equal :new (adopt/utils/last-arg :old :new)))
 (assert (equal @[:a] (adopt/utils/collect @[] :a)))
@@ -350,68 +383,68 @@
 
 # usage as single string
 (assert-no-error
- (adopt/make-interface @{:name ""
-                         :summary ""
-                         :help ""
-                         :usage "[options] arg"
-                         :contents @[(adopt/make-option @{:name 'foo
-                                                          :reduce (ct)
-                                                          :help ""
-                                                          :short "a"
-                                                          :long "foo"})
-                                     (adopt/make-option @{:name 'bar
-                                                          :reduce (ct)
-                                                          :help ""
-                                                          :short "b"
-                                                          :long "bar"})]}))
+  (adopt/make-interface @{:name ""
+                          :summary ""
+                          :help ""
+                          :usage "[options] arg"
+                          :contents @[(adopt/make-option @{:name 'foo
+                                                           :reduce (ct)
+                                                           :help ""
+                                                           :short "a"
+                                                           :long "foo"})
+                                      (adopt/make-option @{:name 'bar
+                                                           :reduce (ct)
+                                                           :help ""
+                                                           :short "b"
+                                                           :long "bar"})]}))
 
 # usage as vector
 (assert-no-error
- (adopt/make-interface @{:name ""
-                         :summary ""
-                         :help ""
-                         :usage ["[options] arg" "-h"]
-                         :contents @[(adopt/make-option @{:name 'foo
-                                                          :reduce (ct)
-                                                          :help ""
-                                                          :short "a"
-                                                          :long "foo"})
-                                     (adopt/make-option @{:name 'bar
-                                                          :reduce (ct)
-                                                          :help ""
-                                                          :short "b"
-                                                          :long "bar"})]}))
+  (adopt/make-interface @{:name ""
+                          :summary ""
+                          :help ""
+                          :usage ["[options] arg" "-h"]
+                          :contents @[(adopt/make-option @{:name 'foo
+                                                           :reduce (ct)
+                                                           :help ""
+                                                           :short "a"
+                                                           :long "foo"})
+                                      (adopt/make-option @{:name 'bar
+                                                           :reduce (ct)
+                                                           :help ""
+                                                           :short "b"
+                                                           :long "bar"})]}))
 
 (assert-error "duplicate short option"
- (adopt/make-interface @{:name ""
-                         :summary ""
-                         :help ""
-                         :usage ""
-                         :contents @[(adopt/make-option @{:name 'foo
-                                                          :reduce (ct)
-                                                          :help ""
-                                                          :short "a"
-                                                          :long "foo"})
-                                     (adopt/make-option @{:name 'bar
-                                                          :reduce (ct)
-                                                          :help ""
-                                                          :short "a"
-                                                          :long "bar"})]}))
+              (adopt/make-interface @{:name ""
+                                      :summary ""
+                                      :help ""
+                                      :usage ""
+                                      :contents @[(adopt/make-option @{:name 'foo
+                                                                       :reduce (ct)
+                                                                       :help ""
+                                                                       :short "a"
+                                                                       :long "foo"})
+                                                  (adopt/make-option @{:name 'bar
+                                                                       :reduce (ct)
+                                                                       :help ""
+                                                                       :short "a"
+                                                                       :long "bar"})]}))
 (assert-error "duplicate long option"
- (adopt/make-interface @{:name ""
-                         :summary ""
-                         :help ""
-                         :usage ""
-                         :contents @[(adopt/make-option @{:name 'foo
-                                                          :reduce (ct)
-                                                          :help ""
-                                                          :short "a"
-                                                          :long "oops"})
-                                     (adopt/make-option @{:name 'bar
-                                                          :reduce (ct)
-                                                          :help ""
-                                                          :short "b"
-                                                          :long "oops"})]}))
+              (adopt/make-interface @{:name ""
+                                      :summary ""
+                                      :help ""
+                                      :usage ""
+                                      :contents @[(adopt/make-option @{:name 'foo
+                                                                       :reduce (ct)
+                                                                       :help ""
+                                                                       :short "a"
+                                                                       :long "oops"})
+                                                  (adopt/make-option @{:name 'bar
+                                                                       :reduce (ct)
+                                                                       :help ""
+                                                                       :short "b"
+                                                                       :long "oops"})]}))
 
 # single/multiple usage
 (def single-usage
@@ -449,5 +482,6 @@
                                                            :long "bar"})]}))
 
 (adopt/print-help multi-usage :program-name "multi")
+
 
 (end-suite)
