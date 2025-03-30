@@ -1,3 +1,5 @@
+(import jre)
+
 (defn maphash [func tbl]
   (loop [[k v] :in (pairs tbl)]
     ((func k v))))
@@ -12,22 +14,22 @@
   (and (= (length h1)
           (length h2))
        (label result
-              (maphash (fn [k v]
-                         (unless (= v (get h2 k))
-                           (return result nil)))
-                       h1)
-              true)))
+         (maphash (fn [k v]
+                    (unless (= v (get h2 k))
+                      (return result nil)))
+                  h1)
+         true)))
 
 (defn array-equal [a1 a2]
   (and (= (length a1)
           (length a2))
        (label result
-              (var i 0)
-              (while (< i (length a1))
-                (unless (= (get a1 i) (get a2 i))
-                  (return result nil))
-                (++ i))
-              true)))
+         (var i 0)
+         (while (< i (length a1))
+           (unless (= (get a1 i) (get a2 i))
+             (return result nil))
+           (++ i))
+         true)))
 
 (defn collect (arr el)
   "Append element `el` to the end of `arr`.
@@ -115,3 +117,43 @@
 (defn handle-error-and-exit (e &opt x)
   (handle-error e x)
   (exit 1))
+
+############################
+# some methods to coerce arguments into numeric values
+
+(def *positive-int-pattern* (jre/compile "[+]?[0-9]+"))
+(def *int-pattern* (jre/compile "[-+]?[0-9]+"))
+(def *float-pattern* (jre/compile "[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)"))
+
+(defn- parse-number [patt x]
+  (let [input (case (type x)
+                :number (string/format "%q" x)
+                :string x)
+        match (jre/match patt input)]
+    (when match
+      (scan-number (get (first (get match :groups)) :str)))))
+
+(defn parse-positive-int [x]
+  (parse-number *positive-int-pattern* x))
+
+(defn parse-int [x]
+  (parse-number *int-pattern* x))
+
+(defn parse-float [x]
+  (parse-number *float-pattern* x))
+
+(defn- require-number [func x msg &opt name]
+  (default name "option")
+  (let [val (func x)]
+    (when (nil? val)
+      (error (string/format "%s requires a %s value, '%V' given" name msg x)))
+    val))
+
+(defn require-positive-int [x &opt name]
+  (require-number parse-positive-int x "positive integer" name))
+
+(defn require-int [x &opt name]
+  (require-number parse-int x "integer" name))
+
+(defn require-float [x &opt name]
+  (require-number parse-float x "float" name))

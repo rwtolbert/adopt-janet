@@ -379,7 +379,7 @@
                                           (string/slice arg 2) # case of -xfoo
                                           (array/pop remaining)))] # case of -x foo
                (when (nil? param)
-                 (error (string/format "Option %q needs a parameter value")))
+                 (error (string/format "Option '%s' needs a parameter value" short-name)))
                ((option :reduce) current param))
              (do
                (when (> (length arg) 2)
@@ -408,7 +408,7 @@
                                           (array/pop remaining)))]
                #  (printf "   param value: %q" param)
                (when (nil? param)
-                 (error (string/format "Option %q needs a parameter value")))
+                 (error (string/format "Option '%s' needs a parameter value" long-name)))
                ((option :reduce) current param))
              ((option :reduce) current)))))
   # (printf "RESULTS %q" results)
