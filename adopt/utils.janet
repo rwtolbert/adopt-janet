@@ -121,9 +121,9 @@
 ############################
 # some methods to coerce arguments into numeric values
 
-(def *positive-int-pattern* (jre/compile "[+]?[0-9]+"))
-(def *int-pattern* (jre/compile "[-+]?[0-9]+"))
-(def *float-pattern* (jre/compile "[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)"))
+(def *positive-int-pattern* "[+]?[0-9]+")
+(def *int-pattern* "[-+]?[0-9]+")
+(def *float-pattern* "[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)")
 
 (defn- parse-number [patt x]
   (let [input (case (type x)
