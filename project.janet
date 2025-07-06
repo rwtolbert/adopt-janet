@@ -7,7 +7,7 @@
   :url "https://github.com/rwtolbert/adopt-janet"
   :repo "git+https://github.com/rwtolbert/adopt-janet.git"
   :dependencies [{:url "https://github.com/janet-lang/spork.git"}
-                 {:url "git@github.com:rwtolbert/re-janet.git" :tag "0.3.1"}])
+                 {:url "https://github.com/rwtolbert/re-janet.git" :tag "0.3.1"}])
 
 (declare-source
   :source @["adopt"])
