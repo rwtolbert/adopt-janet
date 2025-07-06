@@ -10,8 +10,8 @@ from CL to Janet.
 
 ### Prerequisites
 
-Install Janet - https://github.com/janet-lang/janet/releases
-Install spork - https://github.com/janet-lang/spork
+- Install Janet - https://github.com/janet-lang/janet/releases
+- Install spork - https://github.com/janet-lang/spork
 
 ### adopt
 
