@@ -31,9 +31,9 @@ jobs:
       - name: Build spork
         run: cd spork && janet --install .
       - name: Build adopt-janet
-        run: echo "$HOME/janet/bin" >> $GITHUB_PATH && cd fltk-janet && janet-pm deps
+        run: echo "$HOME/janet/bin" >> $GITHUB_PATH && cd adopt-janet && janet-pm deps
       - name: Test adopt-janet
-        run: echo "$HOME/janet/bin" >> $GITHUB_PATH && cd fltk-janet && janet-pm test
+        run: echo "$HOME/janet/bin" >> $GITHUB_PATH && cd adopt-janet && janet-pm test
 
   build-windows:
     runs-on: windows-latest
