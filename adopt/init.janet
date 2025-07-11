@@ -647,10 +647,10 @@
                            (case (type (interface :usage))
                              :string (do
                                        (f ".B %s" (escape (interface :name)))
-                                       (f ".R %s" (escape (interface :usage))))
+                                       (f ".BR %s" (escape (interface :usage))))
                              (loop [item :in (interface :usage)]
                                (f ".B %s" (escape (interface :name)))
-                               (f ".R %s" item)
+                               (f ".BR %s" item)
                                (f ".br")))))
         print-description (fn []
                             (f ".SH DESCRIPTION")
