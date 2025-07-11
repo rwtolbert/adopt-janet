@@ -587,6 +587,9 @@
       (set result (string/format "\\[char46]%s" (string/slice result 1)))))
   result)
 
+(defn escape-spaces [str]
+  (string/replace-all " " "\\ " str))
+
 (defn split-paragraphs [str &keys {:delimiter delim :escape esc?}]
   (default delim "\n.PP\n")
   (default esc? true)
@@ -649,9 +652,19 @@
                                        (f ".B %s" (escape (interface :name)))
                                        (f ".BR %s" (escape (interface :usage))))
                              (loop [item :in (interface :usage)]
-                               (f ".B %s" (escape (interface :name)))
-                               (f ".BR %s" item)
-                               (f ".br")))))
+                               (var output-item item)
+                               # if we find the command name in the usage string, we highlight it
+                               # otherwise, we output the command name before the usage item
+                               # this allows custom usage to include the name like "command | foo [options]"
+                               # without prefacing it with "foo"
+                               (if (string/find (interface :name) item)
+                                 (set output-item
+                                      (string/replace (interface :name)
+                                                      (string/format "\\fB%s\\fP" (interface :name))
+                                                      item))
+                                 (f ".B %s" (escape (interface :name))))
+                               (f ".RI %s" (escape-spaces output-item))
+                               (f ".sp")))))
         print-description (fn []
                             (f ".SH DESCRIPTION")
                             (fa (split-paragraphs (or (interface :manual) (interface :help)))))
