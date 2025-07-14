@@ -503,14 +503,17 @@
   (let [prefix (string/format "Usage: %s" name)
         len (length prefix)
         fmt (string/format "%s%ds" "%" len)
-        prefix2 (string/format fmt name)]
+        prefix2 (string/format fmt name)
+        prefix3 (string/format (string/format "%s%ds" "%" (- len (length name) 1)) " ")]
     (if (= (type usage) :string)
       (printf "Usage: %s %s\n" name usage)
       (do
         (for i 0 (length usage)
           (if (= i 0)
             (printf "%s %s" prefix (get usage i))
-            (printf "%s %s" prefix2 (get usage i))))
+            (if (string/find name (get usage i))
+              (printf "%s %s" prefix3 (get usage i))
+              (printf "%s %s" prefix2 (get usage i)))))
         (when (> (length usage) 0)
           (printf ""))))))
 
