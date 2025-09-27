@@ -1,5 +1,3 @@
-(import jre)
-
 (defn maphash [func tbl]
   (loop [[k v] :in (pairs tbl)]
     ((func k v))))
@@ -121,26 +119,26 @@
 ############################
 # some methods to coerce arguments into numeric values
 
-(def *positive-int-pattern* "[+]?[0-9]+")
-(def *int-pattern* "[-+]?[0-9]+")
-(def *float-pattern* "[-+]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)")
+(def *positive-int-peg* (peg/compile '(number (* 0 (? "+") :d+ -1))))
+(def *int-peg* (peg/compile '(number (* 0 (any (+ "+" "-")) :d+ -1))))
+(def *float-peg* (peg/compile '(number (* 0 (any (+ "+" "-")) :d+ (any (+ "." :d+)) -1))))
 
 (defn- parse-number [patt x]
   (let [input (case (type x)
                 :number (string/format "%q" x)
                 :string x)
-        match (jre/match patt input)]
-    (when match
-      (scan-number (get (first (get match :groups)) :str)))))
+        matches (peg/match patt input)]
+    (when matches
+      (matches 0))))
 
 (defn parse-positive-int [x]
-  (parse-number *positive-int-pattern* x))
+  (parse-number *positive-int-peg* x))
 
 (defn parse-int [x]
-  (parse-number *int-pattern* x))
+  (parse-number *int-peg* x))
 
 (defn parse-float [x]
-  (parse-number *float-pattern* x))
+  (parse-number *float-peg* x))
 
 (defn- require-number [func x msg &opt name]
   (default name "option")
