@@ -23,7 +23,6 @@
                                      :options @[]}))
 
 
-
 # single/multiple usage
 (def single-usage
   (adopt/make-interface @{:name "single"
@@ -58,5 +57,7 @@
 (assert (string/find "Some other opt" data))
 (assert (not (string/find "seldom used" data)))
 (assert (not (string/find "Empty" data)))
+
+(os/rm "manpage.1")
 
 (end-suite)

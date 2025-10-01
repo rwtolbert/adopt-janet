@@ -1,10 +1,36 @@
 (import ./utils :export true)
 (import spork)
+(import spork/path)
+(import spork/sh)
 
-(defn- add2
-  "Sum two numbers"
-  [x y]
-  (+ x y))
+(defn- extract-version [filename]
+  (let [info (-> (slurp filename) parse)]
+    (if info
+      (info :version)
+      "0.0.0")))
+
+(defn- get-file-version
+  "Get adopt version"
+  []
+  (let [current (dyn :current-file)]
+    (if current
+      (let [curdir (path/dirname current)
+            dir1 (path/join curdir "../bundle")
+            info1 (path/join dir1 "info.jdn")
+            dir2 (path/join curdir "../bundle/adopt")
+            info2 (path/join dir2 "info.jdn")]
+        (cond
+          (sh/exists? info1) (extract-version info1)
+          (sh/exists? info2) (extract-version info2)
+          "0.0.0"))
+      "0.0.0")))
+
+(defn version
+  "Get adopt version"
+  []
+  (try
+    (((bundle/manifest "adopt") :info) :version)
+    ([err fib] (get-file-version))))
 
 (defn argv
   "Return a list of the program name and command line arguments.
@@ -12,7 +38,6 @@
   "
   []
   (dyn :args))
-
 
 (defn print-option
   "Print an option/parameter"

@@ -1,0 +1,9 @@
+@{:author "Bob Tolbert"
+  :dependencies @[]
+  :description "Janet port of Adopt CL arg processor from https://github.com/sjl/adopt"
+  :jpm-dependencies @[{:url "https://github.com/janet-lang/spork.git"}]
+  :license "MIT"
+  :name "adopt"
+  :repo "git+https://github.com/rwtolbert/adopt-janet.git"
+  :url "https://github.com/rwtolbert/adopt-janet"
+  :version "0.5.0"}

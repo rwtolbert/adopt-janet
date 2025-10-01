@@ -119,9 +119,9 @@
 ############################
 # some methods to coerce arguments into numeric values
 
-(def *positive-int-peg* (peg/compile '(number (* 0 (? "+") :d+ -1))))
-(def *int-peg* (peg/compile '(number (* 0 (any (+ "+" "-")) :d+ -1))))
-(def *float-peg* (peg/compile '(number (* 0 (any (+ "+" "-")) :d+ (any (+ "." :d+)) -1))))
+(def- *positive-int-peg* (peg/compile '(number (* 0 (? "+") :d+ -1))))
+(def- *int-peg* (peg/compile '(number (* 0 (any (+ "+" "-")) :d+ -1))))
+(def- *float-peg* (peg/compile '(number (* 0 (any (+ "+" "-")) :d+ (any (+ "." :d+)) -1))))
 
 (defn- parse-number [patt x]
   (let [input (case (type x)

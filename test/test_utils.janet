@@ -45,6 +45,10 @@
 (adopt/utils/handle-error (fn [x] (string/format "error val: %q" x)) 42)
 (adopt/utils/handle-error 42)
 
+# version
+(def info (-> (slurp "./bundle/info.jdn") parse))
+(assert (= (info :version) (adopt/version)))
+
 # tests for number parsing
 
 (assert (= (adopt/utils/parse-positive-int "3") 3))

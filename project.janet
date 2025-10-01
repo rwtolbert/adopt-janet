@@ -1,13 +1,14 @@
+(def info (-> (slurp "./bundle/info.jdn") parse))
+
 (declare-project
-  :name "adopt"
-  :description "Janet port of Adopt CL arg processor from https://github.com/sjl/adopt"
-  :author "Bob Tolbert"
-  :license "MIT"
-  :version "0.3.6"
-  :url "https://github.com/rwtolbert/adopt-janet"
-  :repo "git+https://github.com/rwtolbert/adopt-janet.git"
-  :dependencies [{:url "https://github.com/janet-lang/spork.git"}
-                 {:url "https://github.com/rwtolbert/re-janet.git" :tag "0.3.1"}])
+  :name (info :name)
+  :description (info :description)
+  :author (info :author)
+  :license (info :license)
+  :version (info :version)
+  :url (info :url)
+  :repo (info :repo)
+  :dependencies (info :jpm-dependencies))
 
 (declare-source
   :source @["adopt"])
