@@ -53,10 +53,12 @@
 (adopt/print-manual single-usage :stream strm)
 (file/close strm)
 
-(def data (file/read (file/open "manpage.1" :r) :all))
+(def istream (file/open "manpage.1" :r))
+(def data (file/read istream :all))
 (assert (string/find "Some other opt" data))
 (assert (not (string/find "seldom used" data)))
 (assert (not (string/find "Empty" data)))
+(file/close istream)
 
 (os/rm "manpage.1")
 
