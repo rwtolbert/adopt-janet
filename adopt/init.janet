@@ -473,25 +473,12 @@
            (printf "interface error: %q" e)
            (utils/exit 1)))))
 
-(defn- peg-split [patt text]
-  (let [results (peg/find-all patt text)
-        parts @[]]
-    (if (empty? results)
-      @[text]
-      (do
-        (var start 0)
-        (seq [part :in results]
-          (array/push parts (string/slice text start (part :begin)))
-          (set start (part :end)))
-        parts))))
-
-
 (defn wrap-help [text &opt width]
   (default width 72)
   (unless (nil? text)
     (let [patt (peg/compile '(+ "\r\n" "\r" "\n"))
-          lines (peg-split patt text)]
-      (string/trim (doc-format (string/join lines "\n")
+          lines (peg/replace-all patt "\n" text)]
+      (string/trim (doc-format lines
                                (+ 8 width)
                                0)
                    " \n"))))
