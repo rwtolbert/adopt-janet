@@ -1,5 +1,4 @@
 (import ./utils :export true)
-(import spork)
 (import spork/path)
 (import spork/sh)
 
@@ -543,7 +542,7 @@
                    :option-width option-width
                    :include-examples include-examples}]
   (default stream stdout)
-  (default program-name (spork/path/basename (get (argv) 0)))
+  (default program-name (path/basename (get (argv) 0)))
   (default width 72)
   (default option-width 20)
   (default include-examples true)
@@ -585,7 +584,7 @@
                             :exit-fn exit-fn
                             :exit-code exit-code}]
   (default stream stdout)
-  (default program-name (spork/path/basename (get (argv) 0)))
+  (default program-name (path/basename (get (argv) 0)))
   (default width 72)
   (default option-width 20)
   (default include-examples true)
