@@ -31,6 +31,12 @@
 
 (assert (adopt/utils/terminatorp "--"))
 
+(assert (= (adopt/utils/first-arg "a" "b") "a"))
+(assert (= (adopt/utils/first-arg nil "b") "b"))
+
+(assert (= (adopt/utils/last-arg "a" "b") "b"))
+(assert (= (adopt/utils/last-arg nil "b") "b"))
+
 (defn test-x [x]
   (when (nil? x)
     (error (fn [y] (string/format "%q is nil" y)))))

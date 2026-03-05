@@ -29,13 +29,14 @@
            (++ i))
          true)))
 
-(defn collect (arr el)
+(defn collect
   "Append element `el` to the end of `arr`.
 
   It is useful as a `:reduce` function when you want to collect all values given
   for an option.
 
   "
+  [arr el]
   (if (= (type arr) :array)
     (array/push arr el)
     (let [result @[]]
@@ -57,14 +58,14 @@
     old))
 
 
-(defn last-arg (old new)
+(defn last-arg
   ```Return `new`.
 
   It is useful as a `:reduce` function when you want to just keep the last-given
   value for an option.
 
   ```
-  []
+  [old new]
   new)
 
 (defn remove-if-empty [list]
@@ -107,13 +108,13 @@
   (default code 0)
   (os/exit code))
 
-(defn handle-error (e &opt x)
+(defn handle-error [e &opt x]
   (match (type e)
     :string (print e)
     :function (print (e x))
     _ (printf "unknown error type %q" (type e))))
 
-(defn handle-error-and-exit (e &opt x)
+(defn handle-error-and-exit [e &opt x]
   (handle-error e x)
   (exit 1))
 
