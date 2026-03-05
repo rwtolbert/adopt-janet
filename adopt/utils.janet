@@ -45,12 +45,12 @@
 
 
 (defn first-arg
-  "Return `new` if `old` is `nil`, otherwise return `old`.
+  ```Return `new` if `old` is `nil`, otherwise return `old`.
 
   It is useful as a `:reduce` function when you want to just keep the
   first-given value for an option.
 
-  "
+  ```
   [old new]
   (if (nil? old)
     new
@@ -58,12 +58,13 @@
 
 
 (defn last-arg (old new)
-  "Return `new`.
+  ```Return `new`.
 
   It is useful as a `:reduce` function when you want to just keep the last-given
   value for an option.
 
-  "
+  ```
+  []
   new)
 
 (defn remove-if-empty [list]

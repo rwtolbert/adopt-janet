@@ -9,7 +9,7 @@
       "0.0.0")))
 
 (defn- get-file-version
-  "Get adopt version"
+  "Get adopt version from info file"
   []
   (let [current (dyn :current-file)]
     (if current
@@ -32,9 +32,7 @@
     ([err fib] (get-file-version))))
 
 (defn argv
-  "Return a list of the program name and command line arguments.
-
-  "
+  "Return a list of the program name and command line arguments."
   []
   (dyn :args))
 
@@ -57,12 +55,11 @@
   (printf "%s (%d options)" (or (group :name) "default") (length (group :options))))
 
 
-(defn member
+(defn member?
   "Check if item is in arr"
   [item arr]
   (var result false)
   (each i arr
-    # (print "  item " item ",  i " i)
     (when (= i item)
       (set result true)))
   result)
@@ -71,11 +68,11 @@
 (defmacro check-type [place types]
   (def $type (gensym))
   ~(let [$type (type ,place)]
-     (if (not (,member $type ,types))
+     (if (not (,member? $type ,types))
        (error (string/format "'%q (%q)' failed check-type" ,place $type)))))
 
 
-(defn to-pairs [arr]
+(defn- to-pairs [arr]
   "Convert array into array of pairs"
   (assert (even? (length arr)))
   (def len (length arr))
@@ -100,7 +97,7 @@
 
 
 (defn make-option
-  "Create and return an option, suitable for use in an interface.
+  ```Create and return an option, suitable for use in an interface.
 
   This function takes a number of arguments, some required, that define how the
   option interacts with the user.
@@ -109,13 +106,17 @@
   * `:help` (**required**): a short string describing what the option does.
   * `:result-key` (optional): a symbol to use as the key for this option in the hash table of results.
   * `:long` (optional): a string for the long form of the option (e.g. `--foo`).
-  * `:short` (optional): a character for the short form of the option (e.g. `-f`).  At least one of `short` and `long` must be given.
+  * `:short` (optional): a character for the short form of the option (e.g. `-f`).
+    At least one of `short` and `long` must be given.
   * `:manual` (optional): a string to use in place of `help` when rendering a man page.
-  * `:parameter` (optional): a string.  If given, it will turn this option into a parameter-taking option (e.g. `--foo=bar`) and will be used as a placeholder
-  in the help text.
-  * `:reduce` (**required**): a function designator that will be called every time the option is specified by the user.
+  * `:parameter` (optional): a string.  If given, it will turn this option into a parameter-taking
+    option (e.g. `--foo=bar`) and will be used as a placeholder in the help text.
+  * `:reduce` (**required**): a function designator that will be called every time the option is
+    specified by the user.
   * `:initial-value` (optional): a value to use as the initial value of the option.
-  * `:key` (optional): a function designator, only allowed for parameter-taking options, to be called on the values given by the user before they are passed along to the reducing function.  It will not be called on the initial value.
+  * `:key` (optional): a function designator, only allowed for parameter-taking options, to be called
+    on the values given by the user before they are passed along to the reducing function. It will
+    not be called on the initialvalue.
   * `:finally` (optional): a function designator to be called on the final result after all parsing is complete.
 
   The manner in which the reducer is called depends on whether the option takes a parameter:
@@ -124,8 +125,7 @@
   * For options that take parameters, it will be called with the old value and the value given by the user.
 
   See the full documentation for more information.
-
-  "
+  ```
   [{:name name
     :help help
     :result-key result-key
@@ -156,7 +156,7 @@
     (error (string/format "Option %s requires :reducer" name)))
   (when (and (nil? short) (nil? long))
     (error (string/format "Option %s requires one of :short/:long" name)))
-  (when (and (member reducer @[utils/collect utils/first-arg utils/last-arg])
+  (when (and (member? reducer @[utils/collect utils/first-arg utils/last-arg])
              (nil? parameter))
     (error (string/format "Option '%s' has reducer function, which requires a :parameter."
                           name)))
@@ -192,7 +192,7 @@
 
 
 (defn make-boolean-options
-  "Create and return a pair of boolean options, suitable for use in an interface.
+  ```Create and return a pair of boolean options, suitable for use in an interface.
 
   This function reduces some of the boilerplate when creating two `option`s for
   boolean values, e.g. `--foo` and `--no-foo`.  It will try to guess at an
@@ -229,7 +229,7 @@
         :help \"Disable the debugger (the default).\"
         :reduce (constantly false))
 
-  "
+  ```
   [{:name name
     :result-key result-key
     :initial-value initial-value
@@ -265,7 +265,7 @@
                   :reduce (constantly false)})])
 
 (defn make-group
-  "Create and return an option group, suitable for use in an interface.
+  ```Create and return an option group, suitable for use in an interface.
 
   This function takes a number of arguments that define how the group is
   presented to the user:
@@ -277,7 +277,7 @@
   * `manual` (optional): used in place of `help` when rendering a man page.
 
   See the full documentation for more information.
-  "
+  ```
   [{:name name
     :key key
     :options options
@@ -306,7 +306,7 @@
 
 
 (defn make-interface
-  "Create and return a command line interface.
+  ```Create and return a command line interface.
 
   This function takes a number of arguments that define how the interface is
   presented to the user:
@@ -321,7 +321,7 @@
 
   See the full documentation for more information.
 
-  "
+  ```
   [@{:name name
      :summary summary
      :usage usage
@@ -373,19 +373,19 @@
     interface))
 
 # parsing options from args
-(defn initialize-results [interface results]
+(defn- initialize-results [interface results]
   (seq [option :in (interface :options)]
     (if (not (nil? (option :initial-value)))
       (put results (option :result-key) (option :initial-value)))))
 
-(defn finalize-results [interface results]
+(defn- finalize-results [interface results]
   (seq [option :in (interface :options)]
     (when (not (nil? (option :finally)))
       (let [orig (results (option :result-key))
             final ((option :finally) orig)]
         (put results (option :result-key) final)))))
 
-(defn parse-short [interface results arg remaining]
+(defn- parse-short [interface results arg remaining]
   # (printf "interface %q" (interface :short-options))
   (let [short-name (string/slice arg 1 2)
         option (get (interface :short-options) short-name)]
@@ -414,7 +414,7 @@
   remaining)
 
 
-(defn parse-long [interface results arg remaining]
+(defn- parse-long [interface results arg remaining]
   (let [pos (string/find "=" arg)
         long-name (string/slice arg 2 pos)
         option (get (interface :long-options) long-name)]
@@ -472,7 +472,7 @@
            (printf "interface error: %q" e)
            (utils/exit 1)))))
 
-(defn wrap-help [text &opt width]
+(defn- wrap-help [text &opt width]
   (default width 72)
   (unless (nil? text)
     (let [patt (peg/compile '(+ "\r\n" "\r" "\n"))
@@ -482,7 +482,7 @@
                                0)
                    " \n"))))
 
-(defn option-string [option]
+(defn- option-string [option]
   (let [long (option :long)
         short (option :short)
         parameter (option :parameter)
@@ -495,7 +495,7 @@
                                        (when long (string/format "--%s%s" long parameter-string))])
                           ", "))))
 
-(defn leader [len]
+(defn- leader [len]
   (seq [x :range [0 len]]
     (prin " ")))
 
@@ -599,7 +599,7 @@
   (exit-fn exit-code))
 
 ### Man page output
-(defn escape [str]
+(defn- escape [str]
   (var result "")
   (when (not (empty? str))
     (set result str)
@@ -608,10 +608,10 @@
       (set result (string/format "\\[char46]%s" (string/slice result 1)))))
   result)
 
-(defn escape-spaces [str]
+(defn- escape-spaces [str]
   (string/replace-all " " "\\ " str))
 
-(defn split-paragraphs [str &keys {:delimiter delim :escape esc?}]
+(defn- split-paragraphs [str &keys {:delimiter delim :escape esc?}]
   (default delim "\n.PP\n")
   (default esc? true)
   (var lines (string/replace-all "\n" delim str))
@@ -619,7 +619,7 @@
     (set lines (escape lines)))
   lines)
 
-(defn option-troff [option]
+(defn- option-troff [option]
   (let [short (option :short)
         long (option :long)
         parameter (option :parameter)
@@ -640,7 +640,7 @@
 (defn print-manual [interface &keys
                     {:stream stream
                      :manual-section manual-section}]
-  "Print a troff-formatted man page for `interface` to `stream`.
+  ```Print a troff-formatted man page for `interface` to `stream`.
 
   Example:
 
@@ -649,7 +649,7 @@
     #                         :if-exists :supersede)
     #   (print-manual *ui* manual))
 
-  "
+  ```
   (default stream stdout)
   (default manual-section 1)
   (check-type manual-section [:number])

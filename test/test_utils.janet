@@ -4,11 +4,11 @@
 
 (start-suite 'utils)
 
-(assert (adopt/member 1 @[1 4 5]))
-(assert (not (adopt/member 2 @[1 4 5])))
+(assert (adopt/member? 1 @[1 4 5]))
+(assert (not (adopt/member? 2 @[1 4 5])))
 
-(assert (adopt/member adopt/utils/last-arg @[adopt/utils/first-arg adopt/utils/collect adopt/utils/last-arg]))
-(assert (adopt/member adopt/utils/last-arg [adopt/utils/first-arg adopt/utils/collect adopt/utils/last-arg]))
+(assert (adopt/member? adopt/utils/last-arg @[adopt/utils/first-arg adopt/utils/collect adopt/utils/last-arg]))
+(assert (adopt/member? adopt/utils/last-arg [adopt/utils/first-arg adopt/utils/collect adopt/utils/last-arg]))
 
 (assert-no-error "1 is a number" (adopt/check-type 1 [:number]))
 
