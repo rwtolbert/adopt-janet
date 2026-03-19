@@ -472,7 +472,7 @@
            (printf "interface error: %q" e)
            (utils/exit 1)))))
 
-(defn- wrap-help [text &opt width]
+(defn wrap-help [text &opt width]
   (default width 72)
   (unless (nil? text)
     (let [patt (peg/compile '(+ "\r\n" "\r" "\n"))
@@ -603,7 +603,7 @@
   (var result "")
   (when (not (empty? str))
     (set result str)
-    (set result (string/replace-all "-" " " result))
+    (set result (string/replace-all "-" "\\-" result))
     (when (= (result 0) 46)
       (set result (string/format "\\[char46]%s" (string/slice result 1)))))
   result)
@@ -611,13 +611,18 @@
 (defn- escape-spaces [str]
   (string/replace-all " " "\\ " str))
 
-(defn- split-paragraphs [str &keys {:delimiter delim :escape esc?}]
-  (default delim "\n.PP\n")
+(defn- empty-lines [line &opt delim]
+  (default delim ".PP")
+  (if (empty? line) delim line))
+
+(defn split-paragraphs [str &keys {:delimiter delim :escape esc?}]
+  (default delim ".PP")
   (default esc? true)
-  (var lines (string/replace-all "\n" delim str))
+  (var lines (string/split "\n" str))
   (when esc?
-    (set lines (escape lines)))
-  lines)
+    (set lines (map escape lines)))
+  (set lines (map (fn [l] (empty-lines l delim)) lines))
+  (string/join lines "\n"))
 
 (defn- option-troff [option]
   (let [short (option :short)
@@ -692,7 +697,7 @@
         print-option (fn [option]
                        (f ".TP")
                        (fa (option-troff option))
-                       (fa (split-paragraphs (or (option :manual) (option :help)) :delimiter "\n.IP\n")))
+                       (fa (split-paragraphs (or (option :manual) (option :help)) :delimiter ".IP")))
         print-group (fn [group]
                       (unless (empty? (group :options))
                         (if (group :title)
